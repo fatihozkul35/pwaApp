@@ -16,10 +16,10 @@ DEBUG = True
 
 # Render için ALLOWED_HOSTS ayarları
 if DEBUG:
-    ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,0.0.0.0').split(',')
+    ALLOWED_HOSTS = ["*"]
 else:
     # Production için Render domain'i ekleyin
-    ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='your-app-name.onrender.com').split(',')
+    ALLOWED_HOSTS = ["*"]
 
 # Application definition
 INSTALLED_APPS = [
