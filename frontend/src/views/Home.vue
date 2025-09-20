@@ -1,65 +1,106 @@
 <template>
   <div class="home">
     <div class="hero">
-      <h1>PWA Uygulamasına Hoş Geldiniz</h1>
-      <p>Bu uygulama Vue.js ve Django ile geliştirilmiş bir Progressive Web App'tir.</p>
+      <h1>PWA Todo Uygulaması</h1>
+      <p>Görevlerinizi yönetin ve notlarınızı tutun</p>
     </div>
     
-    <div class="features">
-      <div class="feature-card">
-        <h3>📱 PWA Özellikleri</h3>
-        <ul>
-          <li>Offline çalışma</li>
-          <li>Mobil cihaza yüklenebilir</li>
-          <li>Push bildirimleri</li>
-          <li>Hızlı yükleme</li>
-        </ul>
-      </div>
-      
-      <div class="feature-card">
-        <h3>⚡ Modern Teknolojiler</h3>
-        <ul>
-          <li>Vue.js 3</li>
-          <li>Django REST Framework</li>
-          <li>Vuex State Management</li>
-          <li>Responsive Design</li>
-        </ul>
-      </div>
-      
-      <div class="feature-card">
-        <h3>🎯 Özellikler</h3>
-        <ul>
-          <li>Görev yönetimi</li>
-          <li>Not tutma</li>
-          <li>Real-time güncellemeler</li>
-          <li>Kullanıcı dostu arayüz</li>
-        </ul>
-      </div>
-    </div>
-    
-    <div class="stats">
+    <div class="quick-stats">
       <div class="stat-card">
         <h4>{{ completedTasksCount }}</h4>
-        <p>Tamamlanan Görevler</p>
+        <p>Tamamlanan</p>
       </div>
       <div class="stat-card">
         <h4>{{ pendingTasksCount }}</h4>
-        <p>Bekleyen Görevler</p>
+        <p>Bekleyen</p>
       </div>
       <div class="stat-card">
-        <h4>{{ notesCount }}</h4>
-        <p>Toplam Not</p>
+        <h4>{{ totalTasksCount }}</h4>
+        <p>Toplam Görev</p>
+      </div>
+    </div>
+
+    <!-- Yeni görev ekleme formu -->
+    <div class="add-task-section">
+      <h3>Hızlı Görev Ekle</h3>
+      <form @submit.prevent="addQuickTask" class="quick-form">
+        <div class="form-row">
+          <input 
+            v-model="quickTask.title" 
+            type="text" 
+            placeholder="Görev başlığı" 
+            required
+            class="form-input"
+          >
+          <button type="submit" class="add-btn" :disabled="loading">
+            {{ loading ? 'Ekleniyor...' : 'Ekle' }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Todo Listesi -->
+    <div class="todos-section">
+      <div class="section-header">
+        <h3>Güncel Görevler</h3>
+        <router-link to="/tasks" class="view-all-btn">Tümünü Gör</router-link>
+      </div>
+      
+      <div v-if="loading" class="loading">
+        <p>Görevler yükleniyor...</p>
+      </div>
+      
+      <div v-if="error" class="error">
+        <p>{{ error }}</p>
+      </div>
+      
+      <div v-if="recentTasks.length > 0" class="todos-grid">
+        <!-- Debug: {{ recentTasks.length }} görev bulundu -->
+        <div 
+          v-for="task in recentTasks" 
+          :key="task.id" 
+          class="todo-card"
+          :class="{ completed: task.completed }"
+        >
+          <div class="todo-content">
+            <button 
+              @click="toggleTask(task)" 
+              class="toggle-btn"
+              :class="{ completed: task.completed }"
+            >
+              {{ task.completed ? '✓' : '○' }}
+            </button>
+            <div class="todo-text">
+              <h4>{{ task.title }}</h4>
+              <p v-if="task.description" class="todo-description">{{ task.description }}</p>
+              <small class="todo-date">{{ formatDate(task.created_at) }}</small>
+            </div>
+          </div>
+          <button @click="deleteTask(task.id)" class="delete-btn">🗑️</button>
+        </div>
+      </div>
+      
+      <div v-if="recentTasks.length === 0 && !loading" class="empty-state">
+        <p>Henüz görev eklenmemiş. Yukarıdaki formdan ilk görevinizi ekleyin!</p>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import { mapState, mapGetters, mapActions } from 'vuex'
 
 export default {
   name: 'Home',
+  data() {
+    return {
+      quickTask: {
+        title: ''
+      }
+    }
+  },
   computed: {
+    ...mapState(['tasks', 'loading', 'error']),
     ...mapGetters(['completedTasks', 'pendingTasks']),
     completedTasksCount() {
       return this.completedTasks.length
@@ -67,13 +108,69 @@ export default {
     pendingTasksCount() {
       return this.pendingTasks.length
     },
-    notesCount() {
-      return this.$store.state.notes.length
+    totalTasksCount() {
+      if (!Array.isArray(this.tasks)) {
+        return 0
+      }
+      return this.tasks.length
+    },
+    recentTasks() {
+      // Son 5 görevi göster
+      console.log('Home recentTasks computed - tasks:', this.tasks)
+      if (!Array.isArray(this.tasks)) {
+        console.log('Home recentTasks - tasks array değil, boş döndürülüyor')
+        return []
+      }
+      const recent = this.tasks.slice(0, 5)
+      console.log('Home recentTasks - recent tasks:', recent)
+      return recent
     }
   },
-  created() {
-    this.$store.dispatch('fetchTasks')
-    this.$store.dispatch('fetchNotes')
+  async created() {
+    console.log('Home created - başlangıç tasks:', this.tasks)
+    console.log('Home created - store state:', this.$store.state)
+    
+    // Sayfa yüklendiğinde verileri yükle
+    console.log('Home sayfasında veriler yükleniyor...')
+    await this.$store.dispatch('fetchTasks')
+    
+    console.log('Home created - yükleme sonrası tasks:', this.tasks)
+    console.log('Home created - yükleme sonrası store state:', this.$store.state)
+  },
+  methods: {
+    ...mapActions(['fetchTasks', 'createTask', 'updateTask', 'deleteTask']),
+    
+    async addQuickTask() {
+      if (!this.quickTask.title.trim()) return
+      
+      await this.$store.dispatch('createTask', {
+        title: this.quickTask.title,
+        description: ''
+      })
+      this.quickTask.title = ''
+    },
+    
+    async toggleTask(task) {
+      await this.$store.dispatch('updateTask', {
+        id: task.id,
+        taskData: { ...task, completed: !task.completed }
+      })
+    },
+    
+    async deleteTask(taskId) {
+      if (confirm('Bu görevi silmek istediğinizden emin misiniz?')) {
+        await this.$store.dispatch('deleteTask', taskId)
+      }
+    },
+    
+    formatDate(dateString) {
+      return new Date(dateString).toLocaleDateString('tr-TR', {
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    }
   }
 }
 </script>
@@ -82,6 +179,7 @@ export default {
 .home {
   max-width: 1200px;
   margin: 0 auto;
+  padding: 1rem;
 }
 
 .hero {
@@ -90,7 +188,7 @@ export default {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border-radius: 15px;
-  margin-bottom: 3rem;
+  margin-bottom: 2rem;
 }
 
 .hero h1 {
@@ -103,59 +201,23 @@ export default {
   opacity: 0.9;
 }
 
-.features {
+.quick-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-  margin-bottom: 3rem;
-}
-
-.feature-card {
-  background: white;
-  padding: 2rem;
-  border-radius: 15px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-  transition: transform 0.3s ease;
-}
-
-.feature-card:hover {
-  transform: translateY(-5px);
-}
-
-.feature-card h3 {
-  margin-bottom: 1rem;
-  color: #333;
-}
-
-.feature-card ul {
-  list-style: none;
-}
-
-.feature-card li {
-  padding: 0.5rem 0;
-  border-bottom: 1px solid #eee;
-}
-
-.feature-card li:last-child {
-  border-bottom: none;
-}
-
-.stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 1rem;
+  margin-bottom: 2rem;
 }
 
 .stat-card {
   background: white;
-  padding: 2rem;
+  padding: 1.5rem;
   border-radius: 15px;
   box-shadow: 0 5px 15px rgba(0,0,0,0.1);
   text-align: center;
 }
 
 .stat-card h4 {
-  font-size: 2.5rem;
+  font-size: 2rem;
   color: #667eea;
   margin-bottom: 0.5rem;
 }
@@ -163,6 +225,217 @@ export default {
 .stat-card p {
   color: #666;
   font-weight: 500;
+  margin: 0;
+}
+
+.add-task-section {
+  background: white;
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  margin-bottom: 2rem;
+}
+
+.add-task-section h3 {
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.quick-form {
+  margin-top: 1rem;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.form-input {
+  flex: 1;
+  padding: 0.75rem;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.add-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: transform 0.2s;
+  white-space: nowrap;
+}
+
+.add-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.add-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.todos-section {
+  background: white;
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.section-header h3 {
+  color: #333;
+  margin: 0;
+}
+
+.view-all-btn {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: background-color 0.3s;
+}
+
+.view-all-btn:hover {
+  background: rgba(102, 126, 234, 0.1);
+}
+
+.loading,
+.error {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+}
+
+.error {
+  color: #dc3545;
+}
+
+.todos-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.todo-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border: 2px solid #e1e5e9;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+.todo-card:hover {
+  border-color: #667eea;
+  box-shadow: 0 3px 10px rgba(102, 126, 234, 0.2);
+}
+
+.todo-card.completed {
+  opacity: 0.7;
+  border-color: #28a745;
+}
+
+.todo-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.toggle-btn {
+  background: none;
+  border: 2px solid #e1e5e9;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  font-size: 1rem;
+}
+
+.toggle-btn:hover {
+  border-color: #667eea;
+  background: #667eea;
+  color: white;
+}
+
+.toggle-btn.completed {
+  background: #28a745;
+  border-color: #28a745;
+  color: white;
+}
+
+.todo-text {
+  flex: 1;
+}
+
+.todo-text h4 {
+  margin: 0 0 0.25rem 0;
+  color: #333;
+}
+
+.todo-card.completed .todo-text h4 {
+  text-decoration: line-through;
+  color: #6c757d;
+}
+
+.todo-description {
+  margin: 0 0 0.25rem 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.todo-date {
+  color: #999;
+  font-size: 0.8rem;
+}
+
+.delete-btn {
+  background: none;
+  border: 2px solid #e1e5e9;
+  border-radius: 50%;
+  width: 35px;
+  height: 35px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+}
+
+.delete-btn:hover {
+  border-color: #dc3545;
+  background: #dc3545;
+  color: white;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: #666;
 }
 
 @media (max-width: 768px) {
@@ -174,8 +447,27 @@ export default {
     font-size: 1rem;
   }
   
-  .features {
-    grid-template-columns: 1fr;
+  .form-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .section-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+  
+  .todo-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  
+  .todo-content {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
   }
 }
 </style>

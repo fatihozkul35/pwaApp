@@ -24,8 +24,41 @@
 </template>
 
 <script>
+import { mapActions } from 'vuex'
+
 export default {
-  name: 'App'
+  name: 'App',
+  async created() {
+    // Önce localStorage'dan verileri yükle (hızlı görüntü için)
+    this.loadFromLocalStorage()
+    // Sonra backend'den güncel verileri yükle
+    await this.loadInitialData()
+  },
+  methods: {
+    ...mapActions(['fetchTasks', 'fetchNotes']),
+    loadFromLocalStorage() {
+      // localStorage'dan verileri yükle
+      const savedTasks = localStorage.getItem('tasks')
+      const savedNotes = localStorage.getItem('notes')
+      
+      if (savedTasks) {
+        this.$store.commit('SET_TASKS', JSON.parse(savedTasks))
+      }
+      if (savedNotes) {
+        this.$store.commit('SET_NOTES', JSON.parse(savedNotes))
+      }
+    },
+    async loadInitialData() {
+      try {
+        await Promise.all([
+          this.fetchTasks(),
+          this.fetchNotes()
+        ])
+      } catch (error) {
+        console.error('Veri yükleme hatası:', error)
+      }
+    }
+  }
 }
 </script>
 

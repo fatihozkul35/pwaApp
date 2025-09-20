@@ -1,5 +1,14 @@
 import { createStore } from 'vuex'
-import api from '../services/api'
+import { 
+  getTasks, 
+  createTask, 
+  updateTask, 
+  deleteTask,
+  getNotes,
+  createNote,
+  updateNote,
+  deleteNote
+} from '../services/api'
 
 export default createStore({
   state: {
@@ -16,44 +25,90 @@ export default createStore({
       state.error = error
     },
     SET_TASKS(state, tasks) {
-      state.tasks = tasks
+      console.log('SET_TASKS mutation - gelen tasks:', tasks)
+      console.log(Array.isArray(tasks))
+      state.tasks = Array.isArray(tasks.results) ? tasks.results : []
+      console.log('SET_TASKS mutation - state.tasks güncellendi:', state.tasks)
+      // localStorage'a kaydet
+      localStorage.setItem('tasks', JSON.stringify(state.tasks))
+      console.log('SET_TASKS mutation - localStorage\'a kaydedildi')
     },
     ADD_TASK(state, task) {
-      state.tasks.unshift(task)
+      if (Array.isArray(state.tasks)) {
+        state.tasks.unshift(task)
+      } else {
+        state.tasks = [task]
+      }
+      // localStorage'a kaydet
+      localStorage.setItem('tasks', JSON.stringify(state.tasks))
     },
     UPDATE_TASK(state, updatedTask) {
-      const index = state.tasks.findIndex(task => task.id === updatedTask.id)
-      if (index !== -1) {
-        state.tasks.splice(index, 1, updatedTask)
+      if (Array.isArray(state.tasks)) {
+        const index = state.tasks.findIndex(task => task.id === updatedTask.id)
+        if (index !== -1) {
+          state.tasks.splice(index, 1, updatedTask)
+        }
       }
+      // localStorage'a kaydet
+      localStorage.setItem('tasks', JSON.stringify(state.tasks))
     },
     DELETE_TASK(state, taskId) {
-      state.tasks = state.tasks.filter(task => task.id !== taskId)
+      if (Array.isArray(state.tasks)) {
+        state.tasks = state.tasks.filter(task => task.id !== taskId)
+      }
+      // localStorage'a kaydet
+      localStorage.setItem('tasks', JSON.stringify(state.tasks))
     },
     SET_NOTES(state, notes) {
-      state.notes = notes
+      state.notes = Array.isArray(notes) ? notes : []
     },
     ADD_NOTE(state, note) {
-      state.notes.unshift(note)
+      if (Array.isArray(state.notes)) {
+        state.notes.unshift(note)
+      } else {
+        state.notes = [note]
+      }
     },
     UPDATE_NOTE(state, updatedNote) {
-      const index = state.notes.findIndex(note => note.id === updatedNote.id)
-      if (index !== -1) {
-        state.notes.splice(index, 1, updatedNote)
+      if (Array.isArray(state.notes)) {
+        const index = state.notes.findIndex(note => note.id === updatedNote.id)
+        if (index !== -1) {
+          state.notes.splice(index, 1, updatedNote)
+        }
       }
     },
     DELETE_NOTE(state, noteId) {
-      state.notes = state.notes.filter(note => note.id !== noteId)
+      if (Array.isArray(state.notes)) {
+        state.notes = state.notes.filter(note => note.id !== noteId)
+      }
     }
   },
   actions: {
     async fetchTasks({ commit }) {
       commit('SET_LOADING', true)
+      commit('SET_ERROR', null)
       try {
-        const response = await api.getTasks()
+        console.log('Backend\'den veriler çekiliyor...')
+        const response = await getTasks()
+        console.log('Backend\'den gelen veriler:', response.data)
         commit('SET_TASKS', response.data)
+        // localStorage'a kaydet
+        localStorage.setItem('tasks', JSON.stringify(response.data))
+        console.log('Veriler localStorage\'a kaydedildi')
       } catch (error) {
+        console.error('Backend\'den veri çekme hatası:', error)
+        console.error('Error details:', error.response)
+        console.error('Error status:', error.response?.status)
+        console.error('Error data:', error.response?.data)
         commit('SET_ERROR', error.message)
+        // Hata durumunda localStorage'dan yükle
+        const savedTasks = localStorage.getItem('tasks')
+        if (savedTasks) {
+          console.log('localStorage\'dan veriler yükleniyor...')
+          commit('SET_TASKS', JSON.parse(savedTasks))
+        } else {
+          console.log('localStorage\'da da veri yok')
+        }
       } finally {
         commit('SET_LOADING', false)
       }
@@ -61,7 +116,7 @@ export default createStore({
     async createTask({ commit }, taskData) {
       commit('SET_LOADING', true)
       try {
-        const response = await api.createTask(taskData)
+        const response = await createTask(taskData)
         commit('ADD_TASK', response.data)
       } catch (error) {
         commit('SET_ERROR', error.message)
@@ -72,7 +127,7 @@ export default createStore({
     async updateTask({ commit }, { id, taskData }) {
       commit('SET_LOADING', true)
       try {
-        const response = await api.updateTask(id, taskData)
+        const response = await updateTask(id, taskData)
         commit('UPDATE_TASK', response.data)
       } catch (error) {
         commit('SET_ERROR', error.message)
@@ -83,7 +138,7 @@ export default createStore({
     async deleteTask({ commit }, taskId) {
       commit('SET_LOADING', true)
       try {
-        await api.deleteTask(taskId)
+        await deleteTask(taskId)
         commit('DELETE_TASK', taskId)
       } catch (error) {
         commit('SET_ERROR', error.message)
@@ -94,7 +149,7 @@ export default createStore({
     async fetchNotes({ commit }) {
       commit('SET_LOADING', true)
       try {
-        const response = await api.getNotes()
+        const response = await getNotes()
         commit('SET_NOTES', response.data)
       } catch (error) {
         commit('SET_ERROR', error.message)
@@ -105,7 +160,7 @@ export default createStore({
     async createNote({ commit }, noteData) {
       commit('SET_LOADING', true)
       try {
-        const response = await api.createNote(noteData)
+        const response = await createNote(noteData)
         commit('ADD_NOTE', response.data)
       } catch (error) {
         commit('SET_ERROR', error.message)
@@ -116,7 +171,7 @@ export default createStore({
     async updateNote({ commit }, { id, noteData }) {
       commit('SET_LOADING', true)
       try {
-        const response = await api.updateNote(id, noteData)
+        const response = await updateNote(id, noteData)
         commit('UPDATE_NOTE', response.data)
       } catch (error) {
         commit('SET_ERROR', error.message)
@@ -127,7 +182,7 @@ export default createStore({
     async deleteNote({ commit }, noteId) {
       commit('SET_LOADING', true)
       try {
-        await api.deleteNote(noteId)
+        await deleteNote(noteId)
         commit('DELETE_NOTE', noteId)
       } catch (error) {
         commit('SET_ERROR', error.message)
@@ -137,7 +192,17 @@ export default createStore({
     }
   },
   getters: {
-    completedTasks: state => state.tasks.filter(task => task.completed),
-    pendingTasks: state => state.tasks.filter(task => !task.completed)
+    completedTasks: state => {
+      if (!Array.isArray(state.tasks)) {
+        return []
+      }
+      return state.tasks.filter(task => task.completed)
+    },
+    pendingTasks: state => {
+      if (!Array.isArray(state.tasks)) {
+        return []
+      }
+      return state.tasks.filter(task => !task.completed)
+    }
   }
 })

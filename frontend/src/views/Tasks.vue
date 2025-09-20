@@ -41,6 +41,7 @@
     </div>
     
     <div class="tasks-grid">
+      <!-- Debug: {{ tasks.length }} görev bulundu -->
       <div 
         v-for="task in tasks" 
         :key="task.id" 
@@ -94,8 +95,13 @@ export default {
   computed: {
     ...mapState(['tasks', 'loading', 'error'])
   },
-  created() {
-    this.fetchTasks()
+  async created() {
+    console.log('Tasks.vue created - mevcut tasks:', this.tasks)
+    if (this.tasks.length === 0) {
+      console.log('Tasks.vue - veriler yükleniyor...')
+      await this.fetchTasks()
+    }
+    console.log('Tasks.vue created - yükleme sonrası tasks:', this.tasks)
   },
   methods: {
     ...mapActions(['fetchTasks', 'createTask', 'updateTask', 'deleteTask']),
