@@ -2,7 +2,7 @@ import axios from 'axios'
 
 const api = axios.create({
   baseURL: process.env.NODE_ENV === 'production' 
-    ? 'https://your-domain.com/api/' 
+    ? 'https://pwa-backend.onrender.com/api/' 
     : 'http://localhost:8000/api/',
   timeout: 10000,
   headers: {
