@@ -13,7 +13,7 @@ services:
     plan: free
     region: oregon
     buildCommand: "./build.sh"
-    startCommand: "gunicorn pwa_backend.wsgi:application"
+    startCommand: "gunicorn pwa_backend.wsgi:application --bind 0.0.0.0:$PORT --timeout 120 --workers 2"
     envVars:
       - key: DEBUG
         value: "False"
