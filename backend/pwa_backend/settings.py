@@ -14,7 +14,12 @@ SECRET_KEY = 'django-insecure-change-this-in-production-key-12345'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,0.0.0.0').split(',')
+# Render için ALLOWED_HOSTS ayarları
+if DEBUG:
+    ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,0.0.0.0').split(',')
+else:
+    # Production için Render domain'i ekleyin
+    ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='your-app-name.onrender.com').split(',')
 
 # Application definition
 INSTALLED_APPS = [
@@ -61,22 +66,24 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'pwa_backend.wsgi.application'
 
-# Database
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DATABASE_NAME', default='pwa_db'),
-        'USER': config('DATABASE_USER', default=''),
-        'PASSWORD': config('DATABASE_PASSWORD', default=''),
-        'HOST': config('DATABASE_HOST', default='localhost'),
-        'PORT': config('DATABASE_PORT', default='5432'),
-    }
-}
+# Database Configuration
+# Local development: SQLite
+# Production (Render): PostgreSQL via DATABASE_URL
 
-# Render için PostgreSQL otomatik konfigürasyonu
 if config('DATABASE_URL', default=''):
+    # Production: Render PostgreSQL
     import dj_database_url
-    DATABASES['default'] = dj_database_url.parse(config('DATABASE_URL'))
+    DATABASES = {
+        'default': dj_database_url.parse(config('DATABASE_URL'))
+    }
+else:
+    # Local development: SQLite
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
