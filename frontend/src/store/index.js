@@ -7,7 +7,8 @@ import {
   getNotes,
   createNote,
   updateNote,
-  deleteNote
+  deleteNote,
+  wakeUpBackend
 } from '../services/api'
 
 export default createStore({
@@ -89,6 +90,15 @@ export default createStore({
       commit('SET_ERROR', null)
       try {
         console.log('Backend\'den veriler çekiliyor...')
+        
+        // Önce backend'i uyandır (Render.com free tier için)
+        try {
+          await wakeUpBackend()
+          console.log('Backend uyandırıldı')
+        } catch (wakeError) {
+          console.log('Backend uyandırma hatası (normal olabilir):', wakeError.message)
+        }
+        
         const response = await getTasks()
         console.log('Backend\'den gelen veriler:', response.data)
         commit('SET_TASKS', response.data)
@@ -100,7 +110,14 @@ export default createStore({
         console.error('Error details:', error.response)
         console.error('Error status:', error.response?.status)
         console.error('Error data:', error.response?.data)
-        commit('SET_ERROR', error.message)
+        
+        // Timeout hatası için özel mesaj
+        if (error.code === 'ECONNABORTED') {
+          commit('SET_ERROR', 'Backend yanıt vermiyor. Lütfen daha sonra tekrar deneyin.')
+        } else {
+          commit('SET_ERROR', error.message)
+        }
+        
         // Hata durumunda localStorage'dan yükle
         const savedTasks = localStorage.getItem('tasks')
         if (savedTasks) {

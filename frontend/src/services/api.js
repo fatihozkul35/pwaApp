@@ -1,8 +1,20 @@
 import axios from 'axios'
 
+// Environment detection
+const isProduction = window.location.hostname !== 'localhost' && 
+                    !window.location.hostname.includes('127.0.0.1') &&
+                    !window.location.hostname.includes('192.168.')
+
+console.log('Environment Detection:', {
+  hostname: window.location.hostname,
+  isProduction,
+  nodeEnv: process.env.NODE_ENV,
+  apiUrl: isProduction ? 'https://pwaapp-fms1.onrender.com/api/' : 'http://localhost:8000/api/'
+})
+
 const api = axios.create({
-  baseURL: process.env.NODE_ENV === 'production' 
-    ? 'https://pwa-backend.onrender.com/api/' 
+  baseURL: isProduction 
+    ? 'https://pwaapp-fms1.onrender.com/api/' 
     : 'http://localhost:8000/api/',
   timeout: 10000,
   headers: {
