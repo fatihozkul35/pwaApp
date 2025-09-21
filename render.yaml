@@ -13,7 +13,7 @@ services:
     plan: free
     region: oregon
     buildCommand: "cd backend && pip install -r requirements.txt && python manage.py collectstatic --noinput"
-    startCommand: "cd backend && chmod +x start.sh && ./start.sh"
+    startCommand: "cd backend && echo '=== Starting PWA Backend ===' && echo 'Current directory:' $(pwd) && echo '=== Checking DATABASE_URL ===' && if [ -n \"$DATABASE_URL\" ]; then echo 'DATABASE_URL is set'; else echo 'ERROR: DATABASE_URL is not set!'; exit 1; fi && echo '=== Running migrations ===' && python manage.py migrate --verbosity=2 && echo '=== Creating superuser ===' && python manage.py shell -c \"from django.contrib.auth.models import User; User.objects.filter(username='admin').exists() or User.objects.create_superuser('admin', 'admin@example.com', 'admin123')\" && echo '=== Starting Gunicorn ===' && exec gunicorn pwa_backend.wsgi:application --bind 0.0.0.0:$PORT --timeout 120 --workers 2"
     envVars:
       - key: DEBUG
         value: "False"
