@@ -135,12 +135,10 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://localhost:8080",
     "http://127.0.0.1:8080",
-    # Production domains - deploy sonrası güncelleyin
-    "https://your-frontend-domain.vercel.app",
-    "https://your-frontend-domain.netlify.app",
-    "https://your-frontend-domain.onrender.com",
 ]
 
+# Production için tüm origin'lere izin ver (güvenlik için daha sonra kısıtlanabilir)
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
 # Production için ek güvenlik

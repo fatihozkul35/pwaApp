@@ -11,6 +11,7 @@ console.log('Environment Detection:', {
   nodeEnv: process.env.NODE_ENV,
   apiUrl: isProduction ? 'https://pwaapp-fms1.onrender.com/api/' : 'http://localhost:8000/api/'
 })
+console.log("isProduction", isProduction)
 
 const api = axios.create({
   baseURL: isProduction 
@@ -65,5 +66,15 @@ export const getNote = (id) => api.get(`/notes/${id}/`)
 export const createNote = (noteData) => api.post('/notes/', noteData)
 export const updateNote = (id, noteData) => api.put(`/notes/${id}/`, noteData)
 export const deleteNote = (id) => api.delete(`/notes/${id}/`)
+
+// Backend wake-up function for Render.com free tier
+export const wakeUpBackend = async () => {
+  try {
+    await api.get('/tasks/', { timeout: 5000 })
+  } catch (error) {
+    // Ignore errors, just wake up the backend
+    console.log('Backend wake-up attempt:', error.message)
+  }
+}
 
 export default api

@@ -100,6 +100,7 @@ export default createStore({
         }
         
         const response = await getTasks()
+        console.log("response", response)
         console.log('Backend\'den gelen veriler:', response.data)
         commit('SET_TASKS', response.data)
         // localStorage'a kaydet
