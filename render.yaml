@@ -14,6 +14,7 @@ services:
     region: oregon
     buildCommand: "./build.sh"
     startCommand: "gunicorn pwa_backend.wsgi:application --bind 0.0.0.0:$PORT --timeout 120 --workers 2"
+    postDeployCommand: "python manage.py migrate && python manage.py collectstatic --noinput"
     envVars:
       - key: DEBUG
         value: "False"
