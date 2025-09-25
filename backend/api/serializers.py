@@ -20,6 +20,7 @@ class TaskSerializer(serializers.ModelSerializer):
             'category',
             'category_display',
             'due_date',
+            'reminder_time',
             'created_at', 
             'updated_at',
             'is_overdue',

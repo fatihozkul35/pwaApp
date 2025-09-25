@@ -35,6 +35,7 @@ class Task(models.Model):
         verbose_name="Kategori"
     )
     due_date = models.DateTimeField(blank=True, null=True, verbose_name="Bitiş Tarihi")
+    reminder_time = models.DateTimeField(blank=True, null=True, verbose_name="Hatırlatma Zamanı")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Oluşturulma Tarihi")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Güncellenme Tarihi")
     user = models.ForeignKey(

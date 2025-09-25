@@ -98,6 +98,42 @@ class TaskViewSet(viewsets.ModelViewSet):
             'overdue': overdue,
             'completion_rate': round((completed / total * 100), 2) if total > 0 else 0
         })
+    
+    @action(detail=False, methods=['get'])
+    def reminders(self, request):
+        """Hatırlatma zamanı yaklaşan görevleri getir"""
+        now = timezone.now()
+        # Gelecek 24 saat içindeki hatırlatmaları getir
+        from datetime import timedelta
+        next_24_hours = now + timedelta(hours=24)
+        
+        reminder_tasks = Task.objects.filter(
+            reminder_time__isnull=False,
+            reminder_time__gte=now,
+            reminder_time__lte=next_24_hours,
+            completed=False
+        ).order_by('reminder_time')
+        
+        serializer = self.get_serializer(reminder_tasks, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def upcoming_reminders(self, request):
+        """Yaklaşan hatırlatmaları getir"""
+        now = timezone.now()
+        # Gelecek 7 gün içindeki hatırlatmaları getir
+        from datetime import timedelta
+        next_7_days = now + timedelta(days=7)
+        
+        upcoming_reminders = Task.objects.filter(
+            reminder_time__isnull=False,
+            reminder_time__gte=now,
+            reminder_time__lte=next_7_days,
+            completed=False
+        ).order_by('reminder_time')
+        
+        serializer = self.get_serializer(upcoming_reminders, many=True)
+        return Response(serializer.data)
 
 
 class NoteViewSet(viewsets.ModelViewSet):
