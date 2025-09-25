@@ -1,39 +1,39 @@
 <template>
   <div class="home">
     <div class="hero">
-      <h1>PWA Todo Uygulaması</h1>
-      <p>Görevlerinizi yönetin ve notlarınızı tutun</p>
+      <h1>{{ $t('home.title') }}</h1>
+      <p>{{ $t('home.subtitle') }}</p>
     </div>
     
     <div class="quick-stats">
       <div class="stat-card">
         <h4>{{ completedTasksCount }}</h4>
-        <p>Tamamlanan</p>
+        <p>{{ $t('home.completed') }}</p>
       </div>
       <div class="stat-card">
         <h4>{{ pendingTasksCount }}</h4>
-        <p>Bekleyen</p>
+        <p>{{ $t('home.pending') }}</p>
       </div>
       <div class="stat-card">
         <h4>{{ totalTasksCount }}</h4>
-        <p>Toplam Görev</p>
+        <p>{{ $t('home.totalTasks') }}</p>
       </div>
     </div>
 
     <!-- Yeni görev ekleme formu -->
     <div class="add-task-section">
-      <h3>Hızlı Görev Ekle</h3>
+      <h3>{{ $t('home.quickAdd') }}</h3>
       <form @submit.prevent="addQuickTask" class="quick-form">
         <div class="form-row">
           <input 
             v-model="quickTask.title" 
             type="text" 
-            placeholder="Görev başlığı" 
+            :placeholder="$t('home.taskTitle')" 
             required
             class="form-input"
           >
           <button type="submit" class="add-btn" :disabled="loading">
-            {{ loading ? 'Ekleniyor...' : 'Ekle' }}
+            {{ loading ? $t('home.adding') : $t('home.add') }}
           </button>
         </div>
       </form>
@@ -42,12 +42,12 @@
     <!-- Todo Listesi -->
     <div class="todos-section">
       <div class="section-header">
-        <h3>Güncel Görevler</h3>
-        <router-link to="/tasks" class="view-all-btn">Tümünü Gör</router-link>
+        <h3>{{ $t('home.currentTasks') }}</h3>
+        <router-link to="/tasks" class="view-all-btn">{{ $t('home.viewAll') }}</router-link>
       </div>
       
       <div v-if="loading" class="loading">
-        <p>Görevler yükleniyor...</p>
+        <p>{{ $t('home.loading') }}</p>
       </div>
       
       <div v-if="error" class="error">
@@ -81,7 +81,7 @@
       </div>
       
       <div v-if="recentTasks.length === 0 && !loading" class="empty-state">
-        <p>Henüz görev eklenmemiş. Yukarıdaki formdan ilk görevinizi ekleyin!</p>
+        <p>{{ $t('home.emptyState') }}</p>
       </div>
     </div>
   </div>
@@ -158,7 +158,7 @@ export default {
     },
     
     async deleteTask(taskId) {
-      if (confirm('Bu görevi silmek istediğinizden emin misiniz?')) {
+      if (confirm(this.$t('home.deleteConfirm'))) {
         await this.$store.dispatch('deleteTask', taskId)
       }
     },

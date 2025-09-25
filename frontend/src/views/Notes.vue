@@ -1,20 +1,20 @@
 <template>
   <div class="notes">
     <div class="header">
-      <h1>Notlarım</h1>
+      <h1>{{ $t('notes.title') }}</h1>
       <button @click="showAddForm = !showAddForm" class="add-btn">
-        {{ showAddForm ? 'İptal' : 'Yeni Not' }}
+        {{ showAddForm ? $t('notes.cancel') : $t('notes.newNote') }}
       </button>
     </div>
     
     <div v-if="showAddForm" class="add-form">
-      <h3>Yeni Not Ekle</h3>
+      <h3>{{ $t('notes.addNote') }}</h3>
       <form @submit.prevent="addNote">
         <div class="form-group">
           <input 
             v-model="newNote.title" 
             type="text" 
-            placeholder="Not başlığı" 
+            :placeholder="$t('notes.noteTitle')" 
             required
             class="form-input"
           >
@@ -22,19 +22,19 @@
         <div class="form-group">
           <textarea 
             v-model="newNote.content" 
-            placeholder="Not içeriği"
+            :placeholder="$t('notes.noteContent')"
             class="form-textarea"
             required
           ></textarea>
         </div>
         <button type="submit" class="submit-btn" :disabled="loading">
-          {{ loading ? 'Ekleniyor...' : 'Not Ekle' }}
+          {{ loading ? $t('notes.adding') : $t('notes.addNoteBtn') }}
         </button>
       </form>
     </div>
     
     <div v-if="loading" class="loading">
-      <p>Yükleniyor...</p>
+      <p>{{ $t('notes.loading') }}</p>
     </div>
     
     <div v-if="error" class="error">
@@ -62,26 +62,26 @@
         <div class="note-meta">
           <small>{{ formatDate(note.created_at) }}</small>
           <small v-if="note.updated_at !== note.created_at">
-            (Güncellendi: {{ formatDate(note.updated_at) }})
+            ({{ $t('notes.updated') }}: {{ formatDate(note.updated_at) }})
           </small>
         </div>
       </div>
     </div>
     
     <div v-if="notes.length === 0 && !loading" class="empty-state">
-      <p>Henüz not eklenmemiş. İlk notunuzu ekleyin!</p>
+      <p>{{ $t('notes.emptyState') }}</p>
     </div>
     
     <!-- Edit Modal -->
     <div v-if="editingNote" class="modal-overlay" @click="closeEditModal">
       <div class="modal-content" @click.stop>
-        <h3>Notu Düzenle</h3>
+        <h3>{{ $t('notes.editNote') }}</h3>
         <form @submit.prevent="updateNote">
           <div class="form-group">
             <input 
               v-model="editingNote.title" 
               type="text" 
-              placeholder="Not başlığı" 
+              :placeholder="$t('notes.noteTitle')" 
               required
               class="form-input"
             >
@@ -89,17 +89,17 @@
           <div class="form-group">
             <textarea 
               v-model="editingNote.content" 
-              placeholder="Not içeriği"
+              :placeholder="$t('notes.noteContent')"
               class="form-textarea"
               required
             ></textarea>
           </div>
           <div class="modal-actions">
             <button type="button" @click="closeEditModal" class="cancel-btn">
-              İptal
+              {{ $t('notes.cancel') }}
             </button>
             <button type="submit" class="submit-btn" :disabled="loading">
-              {{ loading ? 'Güncelleniyor...' : 'Güncelle' }}
+              {{ loading ? $t('notes.updating') : $t('notes.update') }}
             </button>
           </div>
         </form>
@@ -158,8 +158,8 @@ export default {
     },
     
     async deleteNote(noteId) {
-      if (confirm('Bu notu silmek istediğinizden emin misiniz?')) {
-        await this.deleteNote(noteId)
+      if (confirm(this.$t('notes.deleteConfirm'))) {
+        await this.$store.dispatch('deleteNote', noteId)
       }
     },
     

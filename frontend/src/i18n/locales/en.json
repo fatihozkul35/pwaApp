@@ -1,0 +1,69 @@
+{
+  "nav": {
+    "home": "Home",
+    "tasks": "Tasks",
+    "notes": "Notes",
+    "appName": "PWA App"
+  },
+  "home": {
+    "title": "PWA Todo Application",
+    "subtitle": "Manage your tasks and keep your notes",
+    "completed": "Completed",
+    "pending": "Pending",
+    "totalTasks": "Total Tasks",
+    "quickAdd": "Quick Add Task",
+    "taskTitle": "Task title",
+    "add": "Add",
+    "adding": "Adding...",
+    "currentTasks": "Current Tasks",
+    "viewAll": "View All",
+    "loading": "Loading tasks...",
+    "emptyState": "No tasks added yet. Add your first task using the form above!",
+    "deleteConfirm": "Are you sure you want to delete this task?"
+  },
+  "tasks": {
+    "title": "My Tasks",
+    "newTask": "New Task",
+    "cancel": "Cancel",
+    "addTask": "Add New Task",
+    "taskTitle": "Task title",
+    "taskDescription": "Task description",
+    "addTaskBtn": "Add Task",
+    "adding": "Adding...",
+    "loading": "Loading...",
+    "emptyState": "No tasks added yet. Add your first task!",
+    "deleteConfirm": "Are you sure you want to delete this task?"
+  },
+  "notes": {
+    "title": "My Notes",
+    "newNote": "New Note",
+    "cancel": "Cancel",
+    "addNote": "Add New Note",
+    "noteTitle": "Note title",
+    "noteContent": "Note content",
+    "addNoteBtn": "Add Note",
+    "adding": "Adding...",
+    "loading": "Loading...",
+    "emptyState": "No notes added yet. Add your first note!",
+    "editNote": "Edit Note",
+    "update": "Update",
+    "updating": "Updating...",
+    "updated": "Updated",
+    "deleteConfirm": "Are you sure you want to delete this note?"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "footer": {
+    "copyright": "All rights reserved."
+  }
+}

@@ -3,12 +3,13 @@
     <nav class="navbar">
       <div class="nav-container">
         <router-link to="/" class="nav-brand">
-          PWA App
+          {{ $t('nav.appName') }}
         </router-link>
         <div class="nav-menu">
-          <router-link to="/" class="nav-link">Ana Sayfa</router-link>
-          <router-link to="/tasks" class="nav-link">Görevler</router-link>
-          <router-link to="/notes" class="nav-link">Notlar</router-link>
+          <router-link to="/" class="nav-link">{{ $t('nav.home') }}</router-link>
+          <router-link to="/tasks" class="nav-link">{{ $t('nav.tasks') }}</router-link>
+          <router-link to="/notes" class="nav-link">{{ $t('nav.notes') }}</router-link>
+          <LanguageSwitcher />
         </div>
       </div>
     </nav>
@@ -18,15 +19,19 @@
     </main>
     
     <footer class="footer">
-      <p>&copy; 2024 PWA App. Tüm hakları saklıdır.</p>
+      <p>&copy; 2024 {{ $t('nav.appName') }}. {{ $t('footer.copyright') }}</p>
     </footer>
   </div>
 </template>
 
 <script>
 import { mapActions } from 'vuex'
+import LanguageSwitcher from './components/LanguageSwitcher.vue'
 
 export default {
+  components: {
+    LanguageSwitcher
+  },
   name: 'App',
   async created() {
     // Önce localStorage'dan verileri yükle (hızlı görüntü için)

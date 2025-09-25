@@ -1,0 +1,69 @@
+{
+  "nav": {
+    "home": "Startseite",
+    "tasks": "Aufgaben",
+    "notes": "Notizen",
+    "appName": "PWA App"
+  },
+  "home": {
+    "title": "PWA Todo-Anwendung",
+    "subtitle": "Verwalten Sie Ihre Aufgaben und behalten Sie Ihre Notizen",
+    "completed": "Abgeschlossen",
+    "pending": "Ausstehend",
+    "totalTasks": "Gesamtaufgaben",
+    "quickAdd": "Schnellaufgabe hinzufügen",
+    "taskTitle": "Aufgabentitel",
+    "add": "Hinzufügen",
+    "adding": "Hinzufügen...",
+    "currentTasks": "Aktuelle Aufgaben",
+    "viewAll": "Alle anzeigen",
+    "loading": "Aufgaben werden geladen...",
+    "emptyState": "Noch keine Aufgaben hinzugefügt. Fügen Sie Ihre erste Aufgabe mit dem Formular oben hinzu!",
+    "deleteConfirm": "Sind Sie sicher, dass Sie diese Aufgabe löschen möchten?"
+  },
+  "tasks": {
+    "title": "Meine Aufgaben",
+    "newTask": "Neue Aufgabe",
+    "cancel": "Abbrechen",
+    "addTask": "Neue Aufgabe hinzufügen",
+    "taskTitle": "Aufgabentitel",
+    "taskDescription": "Aufgabenbeschreibung",
+    "addTaskBtn": "Aufgabe hinzufügen",
+    "adding": "Hinzufügen...",
+    "loading": "Laden...",
+    "emptyState": "Noch keine Aufgaben hinzugefügt. Fügen Sie Ihre erste Aufgabe hinzu!",
+    "deleteConfirm": "Sind Sie sicher, dass Sie diese Aufgabe löschen möchten?"
+  },
+  "notes": {
+    "title": "Meine Notizen",
+    "newNote": "Neue Notiz",
+    "cancel": "Abbrechen",
+    "addNote": "Neue Notiz hinzufügen",
+    "noteTitle": "Notiztitel",
+    "noteContent": "Notizinhalt",
+    "addNoteBtn": "Notiz hinzufügen",
+    "adding": "Hinzufügen...",
+    "loading": "Laden...",
+    "emptyState": "Noch keine Notizen hinzugefügt. Fügen Sie Ihre erste Notiz hinzu!",
+    "editNote": "Notiz bearbeiten",
+    "update": "Aktualisieren",
+    "updating": "Aktualisieren...",
+    "updated": "Aktualisiert",
+    "deleteConfirm": "Sind Sie sicher, dass Sie diese Notiz löschen möchten?"
+  },
+  "common": {
+    "loading": "Laden...",
+    "error": "Fehler",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "close": "Schließen",
+    "confirm": "Bestätigen",
+    "yes": "Ja",
+    "no": "Nein"
+  },
+  "footer": {
+    "copyright": "Alle Rechte vorbehalten."
+  }
+}

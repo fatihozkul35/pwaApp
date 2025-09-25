@@ -1,0 +1,69 @@
+{
+  "nav": {
+    "home": "Ana Sayfa",
+    "tasks": "Görevler",
+    "notes": "Notlar",
+    "appName": "PWA App"
+  },
+  "home": {
+    "title": "PWA Todo Uygulaması",
+    "subtitle": "Görevlerinizi yönetin ve notlarınızı tutun",
+    "completed": "Tamamlanan",
+    "pending": "Bekleyen",
+    "totalTasks": "Toplam Görev",
+    "quickAdd": "Hızlı Görev Ekle",
+    "taskTitle": "Görev başlığı",
+    "add": "Ekle",
+    "adding": "Ekleniyor...",
+    "currentTasks": "Güncel Görevler",
+    "viewAll": "Tümünü Gör",
+    "loading": "Görevler yükleniyor...",
+    "emptyState": "Henüz görev eklenmemiş. Yukarıdaki formdan ilk görevinizi ekleyin!",
+    "deleteConfirm": "Bu görevi silmek istediğinizden emin misiniz?"
+  },
+  "tasks": {
+    "title": "Görevlerim",
+    "newTask": "Yeni Görev",
+    "cancel": "İptal",
+    "addTask": "Yeni Görev Ekle",
+    "taskTitle": "Görev başlığı",
+    "taskDescription": "Görev açıklaması",
+    "addTaskBtn": "Görev Ekle",
+    "adding": "Ekleniyor...",
+    "loading": "Yükleniyor...",
+    "emptyState": "Henüz görev eklenmemiş. İlk görevinizi ekleyin!",
+    "deleteConfirm": "Bu görevi silmek istediğinizden emin misiniz?"
+  },
+  "notes": {
+    "title": "Notlarım",
+    "newNote": "Yeni Not",
+    "cancel": "İptal",
+    "addNote": "Yeni Not Ekle",
+    "noteTitle": "Not başlığı",
+    "noteContent": "Not içeriği",
+    "addNoteBtn": "Not Ekle",
+    "adding": "Ekleniyor...",
+    "loading": "Yükleniyor...",
+    "emptyState": "Henüz not eklenmemiş. İlk notunuzu ekleyin!",
+    "editNote": "Notu Düzenle",
+    "update": "Güncelle",
+    "updating": "Güncelleniyor...",
+    "updated": "Güncellendi",
+    "deleteConfirm": "Bu notu silmek istediğinizden emin misiniz?"
+  },
+  "common": {
+    "loading": "Yükleniyor...",
+    "error": "Hata",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "delete": "Sil",
+    "edit": "Düzenle",
+    "close": "Kapat",
+    "confirm": "Onayla",
+    "yes": "Evet",
+    "no": "Hayır"
+  },
+  "footer": {
+    "copyright": "Tüm hakları saklıdır."
+  }
+}

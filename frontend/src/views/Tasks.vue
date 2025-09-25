@@ -1,20 +1,20 @@
 <template>
   <div class="tasks">
     <div class="header">
-      <h1>Görevlerim</h1>
+      <h1>{{ $t('tasks.title') }}</h1>
       <button @click="showAddForm = !showAddForm" class="add-btn">
-        {{ showAddForm ? 'İptal' : 'Yeni Görev' }}
+        {{ showAddForm ? $t('tasks.cancel') : $t('tasks.newTask') }}
       </button>
     </div>
     
     <div v-if="showAddForm" class="add-form">
-      <h3>Yeni Görev Ekle</h3>
+      <h3>{{ $t('tasks.addTask') }}</h3>
       <form @submit.prevent="addTask">
         <div class="form-group">
           <input 
             v-model="newTask.title" 
             type="text" 
-            placeholder="Görev başlığı" 
+            :placeholder="$t('tasks.taskTitle')" 
             required
             class="form-input"
           >
@@ -22,18 +22,18 @@
         <div class="form-group">
           <textarea 
             v-model="newTask.description" 
-            placeholder="Görev açıklaması"
+            :placeholder="$t('tasks.taskDescription')"
             class="form-textarea"
           ></textarea>
         </div>
         <button type="submit" class="submit-btn" :disabled="loading">
-          {{ loading ? 'Ekleniyor...' : 'Görev Ekle' }}
+          {{ loading ? $t('tasks.adding') : $t('tasks.addTaskBtn') }}
         </button>
       </form>
     </div>
     
     <div v-if="loading" class="loading">
-      <p>Yükleniyor...</p>
+      <p>{{ $t('tasks.loading') }}</p>
     </div>
     
     <div v-if="error" class="error">
@@ -73,7 +73,7 @@
     </div>
     
     <div v-if="tasks.length === 0 && !loading" class="empty-state">
-      <p>Henüz görev eklenmemiş. İlk görevinizi ekleyin!</p>
+      <p>{{ $t('tasks.emptyState') }}</p>
     </div>
   </div>
 </template>
@@ -120,8 +120,8 @@ export default {
     },
     
     async deleteTask(taskId) {
-      if (confirm('Bu görevi silmek istediğinizden emin misiniz?')) {
-        await this.deleteTask(taskId)
+      if (confirm(this.$t('tasks.deleteConfirm'))) {
+        await this.$store.dispatch('deleteTask', taskId)
       }
     },
     
