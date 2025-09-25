@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
+    "serve:dev": "vue-cli-service serve --mode development",
     "build": "vue-cli-service build",
+    "build:prod": "vue-cli-service build --mode production",
     "lint": "vue-cli-service lint",
     "vercel-build": "vue-cli-service build"
   },

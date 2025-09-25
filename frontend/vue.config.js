@@ -1,5 +1,11 @@
 const { defineConfig } = require('@vue/cli-service')
 
+// Manuel environment variables
+process.env.NODE_ENV = process.env.NODE_ENV || 'development'
+process.env.VUE_APP_API_URL = process.env.VUE_APP_API_URL || (process.env.NODE_ENV === 'production' 
+  ? 'https://pwaapp-fms1.onrender.com/api/' 
+  : 'http://localhost:8000/api/')
+
 module.exports = defineConfig({
   transpileDependencies: true,
   publicPath: process.env.NODE_ENV === 'production' ? '/' : '/',

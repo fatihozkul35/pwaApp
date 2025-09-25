@@ -1,22 +1,24 @@
 import axios from 'axios'
 
-// Environment detection
-const isProduction = window.location.hostname !== 'localhost' && 
-                    !window.location.hostname.includes('127.0.0.1') &&
-                    !window.location.hostname.includes('192.168.')
+// Environment detection - Manuel fallback
+const isProduction = process.env.NODE_ENV === 'production'
+const isLocalhost = window.location.hostname === 'localhost' || 
+                   window.location.hostname.includes('127.0.0.1') ||
+                   window.location.hostname.includes('192.168.')
+
+const apiUrl = process.env.VUE_APP_API_URL || (isLocalhost 
+  ? 'http://localhost:8000/api/' 
+  : 'https://pwaapp-fms1.onrender.com/api/')
 
 console.log('Environment Detection:', {
   hostname: window.location.hostname,
   isProduction,
   nodeEnv: process.env.NODE_ENV,
-  apiUrl: isProduction ? 'https://pwaapp-fms1.onrender.com/api/' : 'http://localhost:8000/api/'
+  apiUrl: apiUrl
 })
-console.log("isProduction", isProduction)
 
 const api = axios.create({
-  baseURL: isProduction 
-    ? 'https://pwaapp-fms1.onrender.com/api/' 
-    : 'http://localhost:8000/api/',
+  baseURL: apiUrl,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
