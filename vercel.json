@@ -12,18 +12,18 @@
   "env": {
     "NODE_ENV": "production"
   },
-  "routes": [
+  "rewrites": [
     {
-      "src": "/manifest.json",
-      "dest": "/frontend/dist/manifest.json"
+      "source": "/manifest.json",
+      "destination": "/frontend/dist/manifest.json"
     },
     {
-      "src": "/service-worker.js",
-      "dest": "/frontend/dist/service-worker.js"
+      "source": "/service-worker.js",
+      "destination": "/frontend/dist/service-worker.js"
     },
     {
-      "src": "/(.*)",
-      "dest": "/frontend/dist/$1"
+      "source": "/(.*)",
+      "destination": "/frontend/dist/$1"
     }
   ],
   "headers": [
