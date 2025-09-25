@@ -26,6 +26,16 @@
             class="form-textarea"
           ></textarea>
         </div>
+        <div class="form-group">
+          <label class="form-label">{{ $t('tasks.reminderTime') }}</label>
+          <input 
+            v-model="newTask.reminderTime" 
+            type="datetime-local"
+            :placeholder="$t('tasks.reminderTimePlaceholder')"
+            class="form-input"
+          >
+          <small class="form-help">{{ $t('tasks.noReminder') }}</small>
+        </div>
         <button type="submit" class="submit-btn" :disabled="loading">
           {{ loading ? $t('tasks.adding') : $t('tasks.addTaskBtn') }}
         </button>
@@ -68,6 +78,9 @@
         
         <div class="task-meta">
           <small>{{ formatDate(task.created_at) }}</small>
+          <small v-if="task.reminderTime" class="reminder-time">
+            ⏰ {{ formatReminderTime(task.reminderTime) }}
+          </small>
         </div>
       </div>
     </div>
@@ -80,6 +93,7 @@
 
 <script>
 import { mapState, mapActions } from 'vuex'
+import notificationService from '../services/notificationService'
 
 export default {
   name: 'Tasks',
@@ -88,7 +102,8 @@ export default {
       showAddForm: false,
       newTask: {
         title: '',
-        description: ''
+        description: '',
+        reminderTime: ''
       }
     }
   },
@@ -107,8 +122,37 @@ export default {
     ...mapActions(['fetchTasks', 'createTask', 'updateTask', 'deleteTask']),
     
     async addTask() {
-      await this.createTask(this.newTask)
-      this.newTask = { title: '', description: '' }
+      const taskData = { ...this.newTask }
+      await this.createTask(taskData)
+      
+      // Zamanlanmış bildirim ayarla
+      if (taskData.reminderTime) {
+        const settings = notificationService.getNotificationSettings()
+        if (settings.enabled && settings.taskReminders) {
+          const taskWithId = {
+            id: Date.now(), // Geçici ID - gerçek uygulamada backend'den gelecek
+            title: taskData.title,
+            description: taskData.description
+          }
+          
+          const timeoutId = notificationService.scheduleNotificationAt(taskWithId, taskData.reminderTime)
+          if (timeoutId) {
+            console.log('Hatırlatma ayarlandı:', taskData.reminderTime)
+          }
+        }
+      } else {
+        // Anında bildirim gönder
+        const settings = notificationService.getNotificationSettings()
+        if (settings.enabled && settings.taskReminders) {
+          await notificationService.showTaskNotification({
+            id: Date.now(),
+            title: this.newTask.title,
+            description: this.newTask.description
+          })
+        }
+      }
+      
+      this.newTask = { title: '', description: '', reminderTime: '' }
       this.showAddForm = false
     },
     
@@ -117,6 +161,16 @@ export default {
         id: task.id,
         taskData: { ...task, completed: !task.completed }
       })
+      
+      // Görev tamamlandığında bildirim gönder
+      if (!task.completed) {
+        const settings = notificationService.getNotificationSettings()
+        if (settings.enabled && settings.taskReminders) {
+          await notificationService.showReminderNotification(
+            `"${task.title}" görevi tamamlandı! 🎉`
+          )
+        }
+      }
     },
     
     async deleteTask(taskId) {
@@ -127,6 +181,32 @@ export default {
     
     formatDate(dateString) {
       return new Date(dateString).toLocaleDateString('tr-TR')
+    },
+    
+    formatReminderTime(reminderTime) {
+      if (!reminderTime) return ''
+      const date = new Date(reminderTime)
+      const now = new Date()
+      const diff = date.getTime() - now.getTime()
+      
+      if (diff < 0) {
+        return 'Geçmiş'
+      } else if (diff < 60000) { // 1 dakikadan az
+        return 'Şimdi'
+      } else if (diff < 3600000) { // 1 saatten az
+        const minutes = Math.floor(diff / 60000)
+        return `${minutes} dakika sonra`
+      } else if (diff < 86400000) { // 1 günden az
+        const hours = Math.floor(diff / 3600000)
+        return `${hours} saat sonra`
+      } else {
+        return date.toLocaleDateString('tr-TR', {
+          day: 'numeric',
+          month: 'short',
+          hour: '2-digit',
+          minute: '2-digit'
+        })
+      }
     }
   }
 }
@@ -200,6 +280,20 @@ export default {
 .form-textarea {
   resize: vertical;
   min-height: 100px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.form-help {
+  display: block;
+  margin-top: 0.25rem;
+  color: #666;
+  font-size: 0.85rem;
 }
 
 .submit-btn {
@@ -326,6 +420,19 @@ export default {
 .task-meta {
   color: #999;
   font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.reminder-time {
+  color: #667eea;
+  font-weight: 500;
+  background: rgba(102, 126, 234, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  display: inline-block;
+  width: fit-content;
 }
 
 .empty-state {

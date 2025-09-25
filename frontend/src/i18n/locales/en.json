@@ -28,6 +28,9 @@
     "addTask": "Add New Task",
     "taskTitle": "Task title",
     "taskDescription": "Task description",
+    "reminderTime": "Reminder Time",
+    "reminderTimePlaceholder": "Select reminder time",
+    "noReminder": "No reminder",
     "addTaskBtn": "Add Task",
     "adding": "Adding...",
     "loading": "Loading...",
@@ -65,5 +68,32 @@
   },
   "footer": {
     "copyright": "All rights reserved."
+  },
+  "notifications": {
+    "settings": "Notification Settings",
+    "configure": "Configure Notifications",
+    "enableNotifications": "Enable Notifications",
+    "taskReminders": "Task Reminders",
+    "noteReminders": "Note Reminders",
+    "sound": "Sound",
+    "vibration": "Vibration",
+    "permissionGranted": "Notification permission granted",
+    "permissionDenied": "Notification permission denied",
+    "permissionPending": "Notification permission pending",
+    "requestPermission": "Request Permission",
+    "requesting": "Requesting...",
+    "permissionGrantedSuccess": "Notification permission granted successfully!",
+    "permissionError": "Failed to get notification permission",
+    "testNotification": "Test Notification",
+    "testMessage": "This is a test notification!",
+    "newTaskReminder": "New Task Reminder",
+    "taskCompleted": "Task Completed",
+    "noteReminder": "Note Reminder",
+    "reminder": "Reminder",
+    "scheduledReminder": "Scheduled Reminder",
+    "reminderTimeReached": "Reminder time reached!",
+    "taskReminderMessage": "Task reminder: {taskTitle}",
+    "reminderSet": "Reminder set",
+    "reminderCancelled": "Reminder cancelled"
   }
 }

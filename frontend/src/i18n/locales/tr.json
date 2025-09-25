@@ -28,6 +28,9 @@
     "addTask": "Yeni Görev Ekle",
     "taskTitle": "Görev başlığı",
     "taskDescription": "Görev açıklaması",
+    "reminderTime": "Hatırlatma Zamanı",
+    "reminderTimePlaceholder": "Hatırlatma zamanı seçin",
+    "noReminder": "Hatırlatma yok",
     "addTaskBtn": "Görev Ekle",
     "adding": "Ekleniyor...",
     "loading": "Yükleniyor...",
@@ -65,5 +68,32 @@
   },
   "footer": {
     "copyright": "Tüm hakları saklıdır."
+  },
+  "notifications": {
+    "settings": "Bildirim Ayarları",
+    "configure": "Bildirimleri Yapılandır",
+    "enableNotifications": "Bildirimleri Etkinleştir",
+    "taskReminders": "Görev Hatırlatmaları",
+    "noteReminders": "Not Hatırlatmaları",
+    "sound": "Ses",
+    "vibration": "Titreşim",
+    "permissionGranted": "Bildirim izni verildi",
+    "permissionDenied": "Bildirim izni reddedildi",
+    "permissionPending": "Bildirim izni bekleniyor",
+    "requestPermission": "İzin İste",
+    "requesting": "İstek gönderiliyor...",
+    "permissionGrantedSuccess": "Bildirim izni başarıyla alındı!",
+    "permissionError": "Bildirim izni alınamadı",
+    "testNotification": "Test Bildirimi",
+    "testMessage": "Bu bir test bildirimidir!",
+    "newTaskReminder": "Yeni Görev Hatırlatması",
+    "taskCompleted": "Görev Tamamlandı",
+    "noteReminder": "Not Hatırlatması",
+    "reminder": "Hatırlatma",
+    "scheduledReminder": "Zamanlanmış Hatırlatma",
+    "reminderTimeReached": "Hatırlatma zamanı geldi!",
+    "taskReminderMessage": "Görev hatırlatması: {taskTitle}",
+    "reminderSet": "Hatırlatma ayarlandı",
+    "reminderCancelled": "Hatırlatma iptal edildi"
   }
 }

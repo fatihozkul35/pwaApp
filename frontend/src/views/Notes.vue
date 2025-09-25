@@ -110,6 +110,7 @@
 
 <script>
 import { mapState, mapActions } from 'vuex'
+import notificationService from '../services/notificationService'
 
 export default {
   name: 'Notes',
@@ -134,6 +135,17 @@ export default {
     
     async addNote() {
       await this.createNote(this.newNote)
+      
+      // Bildirim gönder
+      const settings = notificationService.getNotificationSettings()
+      if (settings.enabled && settings.noteReminders) {
+        await notificationService.showNoteNotification({
+          id: Date.now(), // Geçici ID
+          title: this.newNote.title,
+          content: this.newNote.content
+        })
+      }
+      
       this.newNote = { title: '', content: '' }
       this.showAddForm = false
     },

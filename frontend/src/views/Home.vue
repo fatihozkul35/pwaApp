@@ -36,6 +36,15 @@
             {{ loading ? $t('home.adding') : $t('home.add') }}
           </button>
         </div>
+        <div class="form-row">
+          <input 
+            v-model="quickTask.reminderTime" 
+            type="datetime-local"
+            :placeholder="$t('tasks.reminderTimePlaceholder')"
+            class="form-input"
+          >
+          <small class="form-help">{{ $t('tasks.noReminder') }}</small>
+        </div>
       </form>
     </div>
 
@@ -89,13 +98,15 @@
 
 <script>
 import { mapState, mapGetters, mapActions } from 'vuex'
+import notificationService from '../services/notificationService'
 
 export default {
   name: 'Home',
   data() {
     return {
       quickTask: {
-        title: ''
+        title: '',
+        reminderTime: ''
       }
     }
   },
@@ -143,11 +154,42 @@ export default {
     async addQuickTask() {
       if (!this.quickTask.title.trim()) return
       
-      await this.$store.dispatch('createTask', {
+      const taskData = {
         title: this.quickTask.title,
-        description: ''
-      })
-      this.quickTask.title = ''
+        description: '',
+        reminderTime: this.quickTask.reminderTime
+      }
+      
+      await this.$store.dispatch('createTask', taskData)
+      
+      // Zamanlanmış bildirim ayarla
+      if (taskData.reminderTime) {
+        const settings = notificationService.getNotificationSettings()
+        if (settings.enabled && settings.taskReminders) {
+          const taskWithId = {
+            id: Date.now(),
+            title: taskData.title,
+            description: taskData.description
+          }
+          
+          const timeoutId = notificationService.scheduleNotificationAt(taskWithId, taskData.reminderTime)
+          if (timeoutId) {
+            console.log('Hatırlatma ayarlandı:', taskData.reminderTime)
+          }
+        }
+      } else {
+        // Anında bildirim gönder
+        const settings = notificationService.getNotificationSettings()
+        if (settings.enabled && settings.taskReminders) {
+          await notificationService.showTaskNotification({
+            id: Date.now(),
+            title: this.quickTask.title,
+            description: ''
+          })
+        }
+      }
+      
+      this.quickTask = { title: '', reminderTime: '' }
     },
     
     async toggleTask(task) {
@@ -155,6 +197,16 @@ export default {
         id: task.id,
         taskData: { ...task, completed: !task.completed }
       })
+      
+      // Görev tamamlandığında bildirim gönder
+      if (!task.completed) {
+        const settings = notificationService.getNotificationSettings()
+        if (settings.enabled && settings.taskReminders) {
+          await notificationService.showReminderNotification(
+            `"${task.title}" görevi tamamlandı! 🎉`
+          )
+        }
+      }
     },
     
     async deleteTask(taskId) {
@@ -249,6 +301,14 @@ export default {
   display: flex;
   gap: 1rem;
   align-items: center;
+  margin-bottom: 1rem;
+}
+
+.form-help {
+  display: block;
+  margin-top: 0.25rem;
+  color: #666;
+  font-size: 0.85rem;
 }
 
 .form-input {

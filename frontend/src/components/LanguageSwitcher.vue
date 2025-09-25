@@ -44,6 +44,7 @@ export default {
   font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.3s ease;
+  min-width: 120px;
 }
 
 .language-select:hover {

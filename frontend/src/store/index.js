@@ -8,13 +8,19 @@ import {
   createNote,
   updateNote,
   deleteNote,
-  wakeUpBackend
+  wakeUpBackend,
+  getReminders,
+  getUpcomingReminders,
+  getTaskStats
 } from '../services/api'
 
 export default createStore({
   state: {
     tasks: [],
     notes: [],
+    reminders: [],
+    upcomingReminders: [],
+    taskStats: null,
     loading: false,
     error: null
   },
@@ -82,6 +88,15 @@ export default createStore({
       if (Array.isArray(state.notes)) {
         state.notes = state.notes.filter(note => note.id !== noteId)
       }
+    },
+    SET_REMINDERS(state, reminders) {
+      state.reminders = Array.isArray(reminders) ? reminders : []
+    },
+    SET_UPCOMING_REMINDERS(state, reminders) {
+      state.upcomingReminders = Array.isArray(reminders) ? reminders : []
+    },
+    SET_TASK_STATS(state, stats) {
+      state.taskStats = stats
     }
   },
   actions: {
@@ -207,6 +222,39 @@ export default createStore({
       } finally {
         commit('SET_LOADING', false)
       }
+    },
+    async fetchReminders({ commit }) {
+      commit('SET_LOADING', true)
+      try {
+        const response = await getReminders()
+        commit('SET_REMINDERS', response.data)
+      } catch (error) {
+        commit('SET_ERROR', error.message)
+      } finally {
+        commit('SET_LOADING', false)
+      }
+    },
+    async fetchUpcomingReminders({ commit }) {
+      commit('SET_LOADING', true)
+      try {
+        const response = await getUpcomingReminders()
+        commit('SET_UPCOMING_REMINDERS', response.data)
+      } catch (error) {
+        commit('SET_ERROR', error.message)
+      } finally {
+        commit('SET_LOADING', false)
+      }
+    },
+    async fetchTaskStats({ commit }) {
+      commit('SET_LOADING', true)
+      try {
+        const response = await getTaskStats()
+        commit('SET_TASK_STATS', response.data)
+      } catch (error) {
+        commit('SET_ERROR', error.message)
+      } finally {
+        commit('SET_LOADING', false)
+      }
     }
   },
   getters: {
@@ -221,6 +269,23 @@ export default createStore({
         return []
       }
       return state.tasks.filter(task => !task.completed)
+    },
+    tasksWithReminders: state => {
+      if (!Array.isArray(state.tasks)) {
+        return []
+      }
+      return state.tasks.filter(task => task.reminder_time)
+    },
+    upcomingTasks: state => {
+      if (!Array.isArray(state.tasks)) {
+        return []
+      }
+      const now = new Date()
+      return state.tasks.filter(task => 
+        task.reminder_time && 
+        new Date(task.reminder_time) > now &&
+        !task.completed
+      )
     }
   }
 })

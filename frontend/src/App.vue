@@ -5,11 +5,18 @@
         <router-link to="/" class="nav-brand">
           {{ $t('nav.appName') }}
         </router-link>
+        
         <div class="nav-menu">
-          <router-link to="/" class="nav-link">{{ $t('nav.home') }}</router-link>
-          <router-link to="/tasks" class="nav-link">{{ $t('nav.tasks') }}</router-link>
-          <router-link to="/notes" class="nav-link">{{ $t('nav.notes') }}</router-link>
-          <LanguageSwitcher />
+          <div class="nav-links">
+            <router-link to="/" class="nav-link">{{ $t('nav.home') }}</router-link>
+            <router-link to="/tasks" class="nav-link">{{ $t('nav.tasks') }}</router-link>
+            <router-link to="/notes" class="nav-link">{{ $t('nav.notes') }}</router-link>
+          </div>
+          
+          <div class="nav-controls">
+            <LanguageSwitcher />
+            <NotificationSettings @permission-granted="onPermissionGranted" @show-message="showMessage" />
+          </div>
         </div>
       </div>
     </nav>
@@ -27,10 +34,13 @@
 <script>
 import { mapActions } from 'vuex'
 import LanguageSwitcher from './components/LanguageSwitcher.vue'
+import NotificationSettings from './components/NotificationSettings.vue'
+import notificationService from './services/notificationService'
 
 export default {
   components: {
-    LanguageSwitcher
+    LanguageSwitcher,
+    NotificationSettings
   },
   name: 'App',
   async created() {
@@ -62,6 +72,18 @@ export default {
       } catch (error) {
         console.error('Veri yükleme hatası:', error)
       }
+    },
+    
+    onPermissionGranted() {
+      console.log('Bildirim izni alındı')
+      // İsteğe bağlı: Hoş geldin bildirimi gönder
+      notificationService.showReminderNotification('Bildirimler başarıyla etkinleştirildi!')
+    },
+    
+    showMessage(message) {
+      // Basit mesaj gösterimi (toast notification)
+      console.log('Message:', message)
+      // Burada toast notification bileşeni kullanılabilir
     }
   }
 }
@@ -112,7 +134,19 @@ body {
 
 .nav-menu {
   display: flex;
+  align-items: center;
   gap: 2rem;
+}
+
+.nav-links {
+  display: flex;
+  gap: 1rem;
+}
+
+.nav-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 .nav-link {
@@ -121,6 +155,7 @@ body {
   padding: 0.5rem 1rem;
   border-radius: 5px;
   transition: background-color 0.3s;
+  white-space: nowrap;
 }
 
 .nav-link:hover,
@@ -148,14 +183,55 @@ body {
   .nav-container {
     flex-direction: column;
     gap: 1rem;
+    padding: 0 1rem;
   }
   
   .nav-menu {
+    flex-direction: column;
     gap: 1rem;
+    width: 100%;
+  }
+  
+  .nav-links {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .nav-controls {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .nav-link {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
   }
   
   .main-content {
     padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav-container {
+    padding: 0 0.5rem;
+  }
+  
+  .nav-links {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .nav-controls {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .nav-link {
+    text-align: center;
+    width: 100%;
   }
 }
 </style>

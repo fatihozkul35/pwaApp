@@ -28,6 +28,9 @@
     "addTask": "Neue Aufgabe hinzufügen",
     "taskTitle": "Aufgabentitel",
     "taskDescription": "Aufgabenbeschreibung",
+    "reminderTime": "Erinnerungszeit",
+    "reminderTimePlaceholder": "Erinnerungszeit auswählen",
+    "noReminder": "Keine Erinnerung",
     "addTaskBtn": "Aufgabe hinzufügen",
     "adding": "Hinzufügen...",
     "loading": "Laden...",
@@ -65,5 +68,32 @@
   },
   "footer": {
     "copyright": "Alle Rechte vorbehalten."
+  },
+  "notifications": {
+    "settings": "Benachrichtigungseinstellungen",
+    "configure": "Benachrichtigungen konfigurieren",
+    "enableNotifications": "Benachrichtigungen aktivieren",
+    "taskReminders": "Aufgaben-Erinnerungen",
+    "noteReminders": "Notizen-Erinnerungen",
+    "sound": "Ton",
+    "vibration": "Vibration",
+    "permissionGranted": "Benachrichtigungsberechtigung erteilt",
+    "permissionDenied": "Benachrichtigungsberechtigung verweigert",
+    "permissionPending": "Benachrichtigungsberechtigung ausstehend",
+    "requestPermission": "Berechtigung anfordern",
+    "requesting": "Anfordern...",
+    "permissionGrantedSuccess": "Benachrichtigungsberechtigung erfolgreich erteilt!",
+    "permissionError": "Benachrichtigungsberechtigung konnte nicht erhalten werden",
+    "testNotification": "Test-Benachrichtigung",
+    "testMessage": "Dies ist eine Test-Benachrichtigung!",
+    "newTaskReminder": "Neue Aufgaben-Erinnerung",
+    "taskCompleted": "Aufgabe abgeschlossen",
+    "noteReminder": "Notizen-Erinnerung",
+    "reminder": "Erinnerung",
+    "scheduledReminder": "Geplante Erinnerung",
+    "reminderTimeReached": "Erinnerungszeit erreicht!",
+    "taskReminderMessage": "Aufgaben-Erinnerung: {taskTitle}",
+    "reminderSet": "Erinnerung eingestellt",
+    "reminderCancelled": "Erinnerung abgebrochen"
   }
 }

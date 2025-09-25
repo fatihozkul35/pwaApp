@@ -62,6 +62,17 @@ export const createTask = (taskData) => api.post('/tasks/', taskData)
 export const updateTask = (id, taskData) => api.put(`/tasks/${id}/`, taskData)
 export const deleteTask = (id) => api.delete(`/tasks/${id}/`)
 
+// Task specific endpoints
+export const getCompletedTasks = () => api.get('/tasks/completed/')
+export const getPendingTasks = () => api.get('/tasks/pending/')
+export const getOverdueTasks = () => api.get('/tasks/overdue/')
+export const getHighPriorityTasks = () => api.get('/tasks/high_priority/')
+export const getTasksByCategory = (category) => api.get(`/tasks/by_category/?category=${category}`)
+export const toggleTaskComplete = (id) => api.post(`/tasks/${id}/toggle_complete/`)
+export const getTaskStats = () => api.get('/tasks/stats/')
+export const getReminders = () => api.get('/tasks/reminders/')
+export const getUpcomingReminders = () => api.get('/tasks/upcoming_reminders/')
+
 // Note endpoints
 export const getNotes = () => api.get('/notes/')
 export const getNote = (id) => api.get(`/notes/${id}/`)
