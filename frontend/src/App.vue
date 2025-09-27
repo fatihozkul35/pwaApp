@@ -21,6 +21,8 @@
       </div>
     </nav>
     
+    <OfflineIndicator />
+    
     <main class="main-content">
       <router-view/>
     </main>
@@ -35,12 +37,14 @@
 import { mapActions } from 'vuex'
 import LanguageSwitcher from './components/LanguageSwitcher.vue'
 import NotificationSettings from './components/NotificationSettings.vue'
+import OfflineIndicator from './components/OfflineIndicator.vue'
 import notificationService from './services/notificationService'
 
 export default {
   components: {
     LanguageSwitcher,
-    NotificationSettings
+    NotificationSettings,
+    OfflineIndicator
   },
   name: 'App',
   async created() {

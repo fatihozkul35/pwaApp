@@ -13,6 +13,7 @@ import {
   getUpcomingReminders,
   getTaskStats
 } from '../services/api'
+import offlineService from '../services/offlineService'
 
 export default createStore({
   state: {
@@ -22,7 +23,9 @@ export default createStore({
     upcomingReminders: [],
     taskStats: null,
     loading: false,
-    error: null
+    error: null,
+    isOnline: navigator.onLine,
+    pendingSyncCount: 0
   },
   mutations: {
     SET_LOADING(state, loading) {
@@ -97,6 +100,12 @@ export default createStore({
     },
     SET_TASK_STATS(state, stats) {
       state.taskStats = stats
+    },
+    SET_ONLINE_STATUS(state, isOnline) {
+      state.isOnline = isOnline
+    },
+    SET_PENDING_SYNC_COUNT(state, count) {
+      state.pendingSyncCount = count
     }
   },
   actions: {
@@ -151,6 +160,11 @@ export default createStore({
       try {
         const response = await createTask(taskData)
         commit('ADD_TASK', response.data)
+        
+        // Offline durumunda pending sync count'u güncelle
+        if (response.data.offline) {
+          commit('SET_PENDING_SYNC_COUNT', offlineService.getPendingSyncCount())
+        }
       } catch (error) {
         commit('SET_ERROR', error.message)
       } finally {
@@ -162,6 +176,11 @@ export default createStore({
       try {
         const response = await updateTask(id, taskData)
         commit('UPDATE_TASK', response.data)
+        
+        // Offline durumunda pending sync count'u güncelle
+        if (response.data.offline) {
+          commit('SET_PENDING_SYNC_COUNT', offlineService.getPendingSyncCount())
+        }
       } catch (error) {
         commit('SET_ERROR', error.message)
       } finally {
@@ -171,7 +190,13 @@ export default createStore({
     async deleteTask({ commit }, taskId) {
       commit('SET_LOADING', true)
       try {
-        await deleteTask(taskId)
+        const response = await deleteTask(taskId)
+        
+        // Offline durumunda pending sync count'u güncelle
+        if (response.data && response.data.offline) {
+          commit('SET_PENDING_SYNC_COUNT', offlineService.getPendingSyncCount())
+        }
+        
         commit('DELETE_TASK', taskId)
       } catch (error) {
         commit('SET_ERROR', error.message)

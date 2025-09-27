@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline - PWA App</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .offline-container {
+            max-width: 500px;
+            padding: 2rem;
+        }
+        .offline-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        .offline-title {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            font-weight: bold;
+        }
+        .offline-message {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+        .retry-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .retry-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+        .offline-features {
+            margin-top: 2rem;
+            text-align: left;
+        }
+        .offline-features h3 {
+            margin-bottom: 1rem;
+        }
+        .offline-features ul {
+            list-style: none;
+            padding: 0;
+        }
+        .offline-features li {
+            padding: 0.5rem 0;
+            opacity: 0.9;
+        }
+        .offline-features li:before {
+            content: "✓ ";
+            color: #4CAF50;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="offline-icon">📱</div>
+        <h1 class="offline-title">Offline Mod</h1>
+        <p class="offline-message">
+            İnternet bağlantınız yok, ancak uygulama offline olarak çalışmaya devam ediyor.
+        </p>
+        
+        <button class="retry-btn" onclick="window.location.reload()">
+            Tekrar Dene
+        </button>
+        
+        <div class="offline-features">
+            <h3>Offline Özellikler:</h3>
+            <ul>
+                <li>Önceden yüklenmiş görevleri görüntüleyebilirsiniz</li>
+                <li>Notlarınızı offline olarak okuyabilirsiniz</li>
+                <li>Yeni görevler ekleyebilirsiniz (internet geldiğinde senkronize olur)</li>
+                <li>Bildirimler çalışmaya devam eder</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        // Offline durumunu kontrol et
+        function checkOnlineStatus() {
+            if (navigator.onLine) {
+                // İnternet bağlantısı varsa ana sayfaya yönlendir
+                window.location.href = '/';
+            }
+        }
+        
+        // Online durumu dinle
+        window.addEventListener('online', () => {
+            window.location.href = '/';
+        });
+        
+        // Sayfa yüklendiğinde kontrol et
+        checkOnlineStatus();
+        
+        // Her 5 saniyede bir kontrol et
+        setInterval(checkOnlineStatus, 5000);
+    </script>
+</body>
+</html>

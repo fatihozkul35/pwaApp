@@ -58,11 +58,22 @@ registerRoute(
   })
 )
 
-// Handle offline fallback
+// Handle offline fallback for navigation requests
 registerRoute(
   ({ request }) => request.mode === 'navigate',
   new NetworkFirst({
     cacheName: 'pages-cache',
+    networkTimeoutSeconds: 3,
+    plugins: [
+      {
+        cacheKeyWillBeUsed: async ({ request }) => {
+          return request.url
+        },
+        cacheWillUpdate: async ({ response }) => {
+          return response.status === 200 ? response : null
+        }
+      }
+    ]
   })
 )
 
@@ -75,19 +86,75 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(self.clients.claim())
 })
 
-// Handle fetch events for better iOS compatibility
+// Handle fetch events for better offline support
 self.addEventListener('fetch', (event) => {
   // Skip cross-origin requests
   if (!event.request.url.startsWith(self.location.origin)) {
     return
   }
   
-  // Handle navigation requests
+  // Handle navigation requests with offline fallback
   if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request).catch(() => {
-        return caches.match('/index.html')
-      })
+      fetch(event.request)
+        .then(response => {
+          // Cache successful responses
+          if (response.status === 200) {
+            const responseClone = response.clone()
+            caches.open('pages-cache').then(cache => {
+              cache.put(event.request, responseClone)
+            })
+          }
+          return response
+        })
+        .catch(() => {
+          // Offline fallback - try to serve from cache
+          return caches.match(event.request)
+            .then(cachedResponse => {
+              if (cachedResponse) {
+                return cachedResponse
+              }
+              // If no cached version, serve offline.html
+              return caches.match('/offline.html')
+            })
+        })
+    )
+  }
+  
+  // Handle API requests with offline support
+  if (event.request.url.includes('/api/')) {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          // Cache successful API responses
+          if (response.status === 200) {
+            const responseClone = response.clone()
+            caches.open('api-cache').then(cache => {
+              cache.put(event.request, responseClone)
+            })
+          }
+          return response
+        })
+        .catch(() => {
+          // Offline fallback for API requests
+          return caches.match(event.request)
+            .then(cachedResponse => {
+              if (cachedResponse) {
+                return cachedResponse
+              }
+              // Return offline message for API requests
+              return new Response(
+                JSON.stringify({ 
+                  error: 'Offline', 
+                  message: 'No internet connection' 
+                }),
+                { 
+                  status: 503, 
+                  headers: { 'Content-Type': 'application/json' } 
+                }
+              )
+            })
+        })
     )
   }
 })

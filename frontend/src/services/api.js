@@ -1,4 +1,5 @@
 import axios from 'axios'
+import offlineService from './offlineService'
 
 // Environment detection - Manuel fallback
 const isProduction = process.env.NODE_ENV === 'production'
@@ -55,12 +56,77 @@ api.interceptors.response.use(
   }
 )
 
-// Task endpoints
-export const getTasks = () => api.get('/tasks/')
-export const getTask = (id) => api.get(`/tasks/${id}/`)
-export const createTask = (taskData) => api.post('/tasks/', taskData)
-export const updateTask = (id, taskData) => api.put(`/tasks/${id}/`, taskData)
-export const deleteTask = (id) => api.delete(`/tasks/${id}/`)
+// Task endpoints with offline support
+export const getTasks = async () => {
+  try {
+    const response = await api.get('/tasks/')
+    return response
+  } catch (error) {
+    if (offlineService.isOffline()) {
+      // Offline durumunda localStorage'dan veri al
+      const cachedTasks = localStorage.getItem('tasks')
+      return { data: cachedTasks ? JSON.parse(cachedTasks) : [] }
+    }
+    throw error
+  }
+}
+
+export const getTask = async (id) => {
+  try {
+    const response = await api.get(`/tasks/${id}/`)
+    return response
+  } catch (error) {
+    if (offlineService.isOffline()) {
+      const cachedTasks = localStorage.getItem('tasks')
+      const tasks = cachedTasks ? JSON.parse(cachedTasks) : []
+      const task = tasks.find(t => t.id === id)
+      return { data: task }
+    }
+    throw error
+  }
+}
+
+export const createTask = async (taskData) => {
+  try {
+    const response = await api.post('/tasks/', taskData)
+    return response
+  } catch (error) {
+    if (offlineService.isOffline()) {
+      // Offline durumunda queue'ya ekle
+      const offlineId = offlineService.addOfflineData('task', taskData, 'create')
+      return { data: { ...taskData, id: offlineId, offline: true } }
+    }
+    throw error
+  }
+}
+
+export const updateTask = async (id, taskData) => {
+  try {
+    const response = await api.put(`/tasks/${id}/`, taskData)
+    return response
+  } catch (error) {
+    if (offlineService.isOffline()) {
+      // Offline durumunda queue'ya ekle
+      offlineService.addOfflineData('task', { ...taskData, id }, 'update')
+      return { data: { ...taskData, id, offline: true } }
+    }
+    throw error
+  }
+}
+
+export const deleteTask = async (id) => {
+  try {
+    const response = await api.delete(`/tasks/${id}/`)
+    return response
+  } catch (error) {
+    if (offlineService.isOffline()) {
+      // Offline durumunda queue'ya ekle
+      offlineService.addOfflineData('task', { id }, 'delete')
+      return { data: { id, deleted: true, offline: true } }
+    }
+    throw error
+  }
+}
 
 // Task specific endpoints
 export const getCompletedTasks = () => api.get('/tasks/completed/')
@@ -73,12 +139,73 @@ export const getTaskStats = () => api.get('/tasks/stats/')
 export const getReminders = () => api.get('/tasks/reminders/')
 export const getUpcomingReminders = () => api.get('/tasks/upcoming_reminders/')
 
-// Note endpoints
-export const getNotes = () => api.get('/notes/')
-export const getNote = (id) => api.get(`/notes/${id}/`)
-export const createNote = (noteData) => api.post('/notes/', noteData)
-export const updateNote = (id, noteData) => api.put(`/notes/${id}/`, noteData)
-export const deleteNote = (id) => api.delete(`/notes/${id}/`)
+// Note endpoints with offline support
+export const getNotes = async () => {
+  try {
+    const response = await api.get('/notes/')
+    return response
+  } catch (error) {
+    if (offlineService.isOffline()) {
+      const cachedNotes = localStorage.getItem('notes')
+      return { data: cachedNotes ? JSON.parse(cachedNotes) : [] }
+    }
+    throw error
+  }
+}
+
+export const getNote = async (id) => {
+  try {
+    const response = await api.get(`/notes/${id}/`)
+    return response
+  } catch (error) {
+    if (offlineService.isOffline()) {
+      const cachedNotes = localStorage.getItem('notes')
+      const notes = cachedNotes ? JSON.parse(cachedNotes) : []
+      const note = notes.find(n => n.id === id)
+      return { data: note }
+    }
+    throw error
+  }
+}
+
+export const createNote = async (noteData) => {
+  try {
+    const response = await api.post('/notes/', noteData)
+    return response
+  } catch (error) {
+    if (offlineService.isOffline()) {
+      const offlineId = offlineService.addOfflineData('note', noteData, 'create')
+      return { data: { ...noteData, id: offlineId, offline: true } }
+    }
+    throw error
+  }
+}
+
+export const updateNote = async (id, noteData) => {
+  try {
+    const response = await api.put(`/notes/${id}/`, noteData)
+    return response
+  } catch (error) {
+    if (offlineService.isOffline()) {
+      offlineService.addOfflineData('note', { ...noteData, id }, 'update')
+      return { data: { ...noteData, id, offline: true } }
+    }
+    throw error
+  }
+}
+
+export const deleteNote = async (id) => {
+  try {
+    const response = await api.delete(`/notes/${id}/`)
+    return response
+  } catch (error) {
+    if (offlineService.isOffline()) {
+      offlineService.addOfflineData('note', { id }, 'delete')
+      return { data: { id, deleted: true, offline: true } }
+    }
+    throw error
+  }
+}
 
 // Backend wake-up function for Render.com free tier
 export const wakeUpBackend = async () => {
