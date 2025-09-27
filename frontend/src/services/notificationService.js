@@ -13,6 +13,14 @@ class NotificationService {
 
     this.permission = Notification.permission
     
+    // iOS Safari için özel kontrol
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    const isInStandaloneMode = ('standalone' in window.navigator) && (window.navigator.standalone)
+    
+    if (isIOS && !isInStandaloneMode) {
+      console.warn('iOS Safari\'de PWA olarak açılmadığı için bildirimler çalışmayabilir')
+    }
+    
     // Bildirim izni varsa, service worker'ı kaydet
     if (this.permission === 'granted') {
       this.registerServiceWorker()
@@ -24,12 +32,20 @@ class NotificationService {
       throw new Error('Bildirimler desteklenmiyor')
     }
 
+    // iOS Safari için özel kontrol
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    const isInStandaloneMode = ('standalone' in window.navigator) && (window.navigator.standalone)
+    
+    if (isIOS && !isInStandaloneMode) {
+      throw new Error('iOS\'te bildirim izni almak için uygulamayı ana ekrandan açmanız gerekiyor')
+    }
+
     if (this.permission === 'granted') {
       return true
     }
 
     if (this.permission === 'denied') {
-      throw new Error('Bildirim izni reddedildi')
+      throw new Error('Bildirim izni reddedildi. Lütfen tarayıcı ayarlarından bildirim iznini etkinleştirin.')
     }
 
     try {
@@ -63,11 +79,21 @@ class NotificationService {
       return false
     }
 
+    // iOS Safari için özel kontrol
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    const isInStandaloneMode = ('standalone' in window.navigator) && (window.navigator.standalone)
+    
+    if (isIOS && !isInStandaloneMode) {
+      console.warn('iOS Safari\'de PWA olarak açılmadığı için bildirimler çalışmayabilir')
+      return false
+    }
+
     try {
       const notification = new Notification(title, {
         icon: '/img/icons/icon-192x192.png',
         badge: '/img/icons/icon-96x96.png',
         requireInteraction: true,
+        silent: false, // iOS için ses açık
         ...options
       })
 

@@ -91,3 +91,27 @@ self.addEventListener('fetch', (event) => {
     )
   }
 })
+
+// iOS PWA bildirim desteği
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  
+  // Uygulamayı odakla
+  event.waitUntil(
+    clients.matchAll({ type: 'window' }).then(clientList => {
+      for (const client of clientList) {
+        if (client.url === self.location.origin && 'focus' in client) {
+          return client.focus()
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(self.location.origin)
+      }
+    })
+  )
+})
+
+// iOS PWA bildirim aksiyonları
+self.addEventListener('notificationclose', (event) => {
+  console.log('Bildirim kapatıldı:', event.notification.tag)
+})

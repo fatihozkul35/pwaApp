@@ -79,9 +79,25 @@
         </div>
         <div v-else-if="permission === 'denied'" class="status denied">
           ❌ {{ $t('notifications.permissionDenied') }}
+          <div class="ios-instructions" v-if="isIOS && !isInStandaloneMode">
+            <p><strong>iOS için:</strong></p>
+            <ol>
+              <li>Uygulamayı ana ekrana ekleyin</li>
+              <li>Ana ekrandan uygulamayı açın</li>
+              <li>Bildirim izni isteyin</li>
+            </ol>
+          </div>
         </div>
         <div v-else class="status pending">
           ⏳ {{ $t('notifications.permissionPending') }}
+          <div class="ios-instructions" v-if="isIOS && !isInStandaloneMode">
+            <p><strong>iOS için:</strong></p>
+            <ol>
+              <li>Uygulamayı ana ekrana ekleyin</li>
+              <li>Ana ekrandan uygulamayı açın</li>
+              <li>Bildirim izni isteyin</li>
+            </ol>
+          </div>
         </div>
       </div>
 
@@ -117,7 +133,9 @@ export default {
       showSettings: false,
       requesting: false,
       settings: notificationService.getNotificationSettings(),
-      permission: notificationService.permission
+      permission: notificationService.permission,
+      isIOS: /iPad|iPhone|iPod/.test(navigator.userAgent),
+      isInStandaloneMode: ('standalone' in window.navigator) && (window.navigator.standalone)
     }
   },
   methods: {
@@ -260,6 +278,28 @@ export default {
   background: #fff3cd;
   color: #856404;
   border: 1px solid #ffeaa7;
+}
+
+.ios-instructions {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.ios-instructions p {
+  margin: 0 0 0.5rem 0;
+  font-weight: 600;
+}
+
+.ios-instructions ol {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.ios-instructions li {
+  margin-bottom: 0.25rem;
 }
 
 .action-buttons {
