@@ -165,14 +165,14 @@ self.addEventListener('notificationclick', (event) => {
   
   // Uygulamayı odakla
   event.waitUntil(
-    clients.matchAll({ type: 'window' }).then(clientList => {
+    self.clients.matchAll({ type: 'window' }).then(clientList => {
       for (const client of clientList) {
         if (client.url === self.location.origin && 'focus' in client) {
           return client.focus()
         }
       }
-      if (clients.openWindow) {
-        return clients.openWindow(self.location.origin)
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(self.location.origin)
       }
     })
   )
