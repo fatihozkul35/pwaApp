@@ -197,7 +197,10 @@ export default {
   border-radius: 15px;
   box-shadow: 0 5px 15px rgba(0,0,0,0.1);
   margin-bottom: 2rem;
-  overflow: hidden;
+  overflow: visible;
+  position: relative;
+  z-index: 1001;
+  flex-shrink: 0;
 }
 
 .settings-header {
@@ -233,6 +236,18 @@ export default {
 
 .settings-content {
   padding: 1.5rem;
+  background: white;
+  border-radius: 0 0 15px 15px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  z-index: 1002;
+  max-height: 80vh;
+  overflow-y: auto;
+  margin-top: 1rem;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  width: 100%;
 }
 
 .setting-item {
@@ -370,6 +385,18 @@ export default {
   .test-btn {
     flex: none;
     width: 100%;
+  }
+  
+  .settings-content {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-height: 100vh;
+    border-radius: 0;
+    z-index: 9999;
+    margin-top: 0;
   }
 }
 </style>

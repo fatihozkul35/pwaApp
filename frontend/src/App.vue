@@ -114,6 +114,10 @@ body {
   color: white;
   padding: 1rem 0;
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  position: relative;
+  z-index: 1000;
+  overflow: visible;
+  flex-shrink: 0;
 }
 
 .nav-container {
@@ -123,6 +127,8 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  height: 60px;
+  flex-shrink: 0;
 }
 
 .nav-brand {
@@ -147,6 +153,7 @@ body {
   display: flex;
   align-items: center;
   gap: 1rem;
+  position: relative;
 }
 
 .nav-link {
