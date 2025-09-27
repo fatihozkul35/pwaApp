@@ -1,7 +1,10 @@
-import { precacheAndRoute } from 'workbox-precaching'
+import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching'
 import { registerRoute } from 'workbox-routing'
 import { StaleWhileRevalidate, CacheFirst, NetworkFirst } from 'workbox-strategies'
 import { CacheableResponsePlugin } from 'workbox-cacheable-response'
+
+// Clean up outdated caches
+cleanupOutdatedCaches()
 
 // Precache static assets
 precacheAndRoute(self.__WB_MANIFEST)
@@ -62,3 +65,29 @@ registerRoute(
     cacheName: 'pages-cache',
   })
 )
+
+// iOS Safari specific handling
+self.addEventListener('install', () => {
+  self.skipWaiting()
+})
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(self.clients.claim())
+})
+
+// Handle fetch events for better iOS compatibility
+self.addEventListener('fetch', (event) => {
+  // Skip cross-origin requests
+  if (!event.request.url.startsWith(self.location.origin)) {
+    return
+  }
+  
+  // Handle navigation requests
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => {
+        return caches.match('/index.html')
+      })
+    )
+  }
+})
