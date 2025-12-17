@@ -9,17 +9,17 @@ from decouple import config
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-change-this-in-production-key-12345'
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-this-in-production-key-12345')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=True, cast=bool)
 
 # Render için ALLOWED_HOSTS ayarları
-if DEBUG:
+ALLOWED_HOSTS_STR = config('ALLOWED_HOSTS', default='*')
+if ALLOWED_HOSTS_STR == '*':
     ALLOWED_HOSTS = ["*"]
 else:
-    # Production için Render domain'i ekleyin
-    ALLOWED_HOSTS = ["*"]
+    ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS_STR.split(',')]
 
 # Application definition
 INSTALLED_APPS = [

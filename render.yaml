@@ -24,6 +24,6 @@ services:
           name: pwa-postgres-db
           property: connectionString
       - key: ALLOWED_HOSTS
-        value: "pwaapp-fms1.onrender.com"
+        value: "*"
       - key: PYTHON_VERSION
-        value: "3.11.0"
+        value: "3.11.8"
