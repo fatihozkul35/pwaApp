@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Task, Note
+from .models import Task
 
 
 @admin.register(Task)
@@ -41,10 +41,3 @@ class TaskAdmin(admin.ModelAdmin):
         """Admin panelinde görevleri getir"""
         qs = super().get_queryset(request)
         return qs.select_related('user')
-
-
-@admin.register(Note)
-class NoteAdmin(admin.ModelAdmin):
-    list_display = ['title', 'created_at']
-    list_filter = ['created_at']
-    search_fields = ['title', 'content']

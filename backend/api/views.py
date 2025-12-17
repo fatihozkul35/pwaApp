@@ -2,8 +2,8 @@ from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils import timezone
-from .models import Task, Note
-from .serializers import TaskSerializer, NoteSerializer
+from .models import Task
+from .serializers import TaskSerializer
 
 
 class TaskViewSet(viewsets.ModelViewSet):
@@ -134,12 +134,3 @@ class TaskViewSet(viewsets.ModelViewSet):
         
         serializer = self.get_serializer(upcoming_reminders, many=True)
         return Response(serializer.data)
-
-
-class NoteViewSet(viewsets.ModelViewSet):
-    queryset = Note.objects.all()
-    serializer_class = NoteSerializer
-
-    def perform_create(self, serializer):
-        # Burada kullanıcı kimlik doğrulaması eklenebilir
-        serializer.save()

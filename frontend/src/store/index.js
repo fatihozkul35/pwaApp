@@ -4,10 +4,6 @@ import {
   createTask, 
   updateTask, 
   deleteTask,
-  getNotes,
-  createNote,
-  updateNote,
-  deleteNote,
   wakeUpBackend,
   getReminders,
   getUpcomingReminders,
@@ -18,7 +14,6 @@ import offlineService from '../services/offlineService'
 export default createStore({
   state: {
     tasks: [],
-    notes: [],
     reminders: [],
     upcomingReminders: [],
     taskStats: null,
@@ -68,29 +63,6 @@ export default createStore({
       }
       // localStorage'a kaydet
       localStorage.setItem('tasks', JSON.stringify(state.tasks))
-    },
-    SET_NOTES(state, notes) {
-      state.notes = Array.isArray(notes) ? notes : []
-    },
-    ADD_NOTE(state, note) {
-      if (Array.isArray(state.notes)) {
-        state.notes.unshift(note)
-      } else {
-        state.notes = [note]
-      }
-    },
-    UPDATE_NOTE(state, updatedNote) {
-      if (Array.isArray(state.notes)) {
-        const index = state.notes.findIndex(note => note.id === updatedNote.id)
-        if (index !== -1) {
-          state.notes.splice(index, 1, updatedNote)
-        }
-      }
-    },
-    DELETE_NOTE(state, noteId) {
-      if (Array.isArray(state.notes)) {
-        state.notes = state.notes.filter(note => note.id !== noteId)
-      }
     },
     SET_REMINDERS(state, reminders) {
       state.reminders = Array.isArray(reminders) ? reminders : []
@@ -198,50 +170,6 @@ export default createStore({
         }
         
         commit('DELETE_TASK', taskId)
-      } catch (error) {
-        commit('SET_ERROR', error.message)
-      } finally {
-        commit('SET_LOADING', false)
-      }
-    },
-    async fetchNotes({ commit }) {
-      commit('SET_LOADING', true)
-      try {
-        const response = await getNotes()
-        commit('SET_NOTES', response.data)
-      } catch (error) {
-        commit('SET_ERROR', error.message)
-      } finally {
-        commit('SET_LOADING', false)
-      }
-    },
-    async createNote({ commit }, noteData) {
-      commit('SET_LOADING', true)
-      try {
-        const response = await createNote(noteData)
-        commit('ADD_NOTE', response.data)
-      } catch (error) {
-        commit('SET_ERROR', error.message)
-      } finally {
-        commit('SET_LOADING', false)
-      }
-    },
-    async updateNote({ commit }, { id, noteData }) {
-      commit('SET_LOADING', true)
-      try {
-        const response = await updateNote(id, noteData)
-        commit('UPDATE_NOTE', response.data)
-      } catch (error) {
-        commit('SET_ERROR', error.message)
-      } finally {
-        commit('SET_LOADING', false)
-      }
-    },
-    async deleteNote({ commit }, noteId) {
-      commit('SET_LOADING', true)
-      try {
-        await deleteNote(noteId)
-        commit('DELETE_NOTE', noteId)
       } catch (error) {
         commit('SET_ERROR', error.message)
       } finally {

@@ -8,13 +8,10 @@
         
         <div class="nav-menu">
           <div class="nav-links">
-            <router-link to="/" class="nav-link">{{ $t('nav.home') }}</router-link>
             <router-link to="/tasks" class="nav-link">{{ $t('nav.tasks') }}</router-link>
-            <router-link to="/notes" class="nav-link">{{ $t('nav.notes') }}</router-link>
           </div>
           
           <div class="nav-controls">
-            <LanguageSwitcher />
             <NotificationSettings @permission-granted="onPermissionGranted" @show-message="showMessage" />
           </div>
         </div>
@@ -35,14 +32,12 @@
 
 <script>
 import { mapActions } from 'vuex'
-import LanguageSwitcher from './components/LanguageSwitcher.vue'
 import NotificationSettings from './components/NotificationSettings.vue'
 import OfflineIndicator from './components/OfflineIndicator.vue'
 import notificationService from './services/notificationService'
 
 export default {
   components: {
-    LanguageSwitcher,
     NotificationSettings,
     OfflineIndicator
   },
@@ -54,25 +49,18 @@ export default {
     await this.loadInitialData()
   },
   methods: {
-    ...mapActions(['fetchTasks', 'fetchNotes']),
+    ...mapActions(['fetchTasks']),
     loadFromLocalStorage() {
       // localStorage'dan verileri yükle
       const savedTasks = localStorage.getItem('tasks')
-      const savedNotes = localStorage.getItem('notes')
       
       if (savedTasks) {
         this.$store.commit('SET_TASKS', JSON.parse(savedTasks))
       }
-      if (savedNotes) {
-        this.$store.commit('SET_NOTES', JSON.parse(savedNotes))
-      }
     },
     async loadInitialData() {
       try {
-        await Promise.all([
-          this.fetchTasks(),
-          this.fetchNotes()
-        ])
+        await this.fetchTasks()
       } catch (error) {
         console.error('Veri yükleme hatası:', error)
       }

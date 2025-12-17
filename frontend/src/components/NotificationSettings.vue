@@ -1,13 +1,15 @@
 <template>
   <div class="notification-settings">
-    <div class="settings-header">
-      <h3>{{ $t('notifications.settings') }}</h3>
-      <button @click="toggleSettings" class="toggle-btn">
-        {{ showSettings ? $t('common.close') : $t('notifications.configure') }}
-      </button>
-    </div>
+    <button @click="toggleSettings" class="notification-icon-btn" :class="{ active: showSettings }">
+      <span class="notification-icon">🔔</span>
+    </button>
 
     <div v-if="showSettings" class="settings-content">
+      <div class="settings-header">
+        <h3>{{ $t('notifications.settings') }}</h3>
+        <button @click="toggleSettings" class="close-btn">✕</button>
+      </div>
+      
       <div class="setting-item">
         <label class="setting-label">
           <input 
@@ -31,19 +33,6 @@
           >
           <span class="checkmark"></span>
           {{ $t('notifications.taskReminders') }}
-        </label>
-      </div>
-
-      <div v-if="settings.enabled" class="setting-item">
-        <label class="setting-label">
-          <input 
-            type="checkbox" 
-            v-model="settings.noteReminders"
-            @change="updateSettings"
-            class="setting-checkbox"
-          >
-          <span class="checkmark"></span>
-          {{ $t('notifications.noteReminders') }}
         </label>
       </div>
 
@@ -181,26 +170,90 @@ export default {
       } catch (error) {
         console.error('Test bildirimi gönderilemedi:', error)
       }
+    },
+    
+    handleClickOutside(event) {
+      const el = this.$el
+      if (el && !el.contains(event.target) && this.showSettings) {
+        this.showSettings = false
+      }
     }
   },
   
   mounted() {
     // Bildirim izni durumunu güncelle
     this.permission = notificationService.permission
+    
+    // Dışarı tıklandığında dropdown'ı kapat
+    document.addEventListener('click', this.handleClickOutside)
+  },
+  
+  beforeUnmount() {
+    document.removeEventListener('click', this.handleClickOutside)
   }
 }
 </script>
 
 <style scoped>
 .notification-settings {
+  position: relative;
+  z-index: 1001;
+}
+
+.notification-icon-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+}
+
+.notification-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.notification-icon-btn.active {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.notification-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.settings-content {
   background: white;
   border-radius: 15px;
   box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-  margin-bottom: 2rem;
-  overflow: visible;
-  position: relative;
-  z-index: 1001;
-  flex-shrink: 0;
+  z-index: 1002;
+  max-height: 80vh;
+  overflow-y: auto;
+  margin-top: 0.5rem;
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  width: 320px;
+  min-width: 280px;
+}
+
+.settings-content > .setting-item:first-of-type {
+  padding-top: 1.5rem;
+}
+
+.settings-content > .permission-status {
+  padding: 0 1.5rem;
+}
+
+.settings-content > .action-buttons {
+  padding: 0 1.5rem 1.5rem 1.5rem;
 }
 
 .settings-header {
@@ -208,50 +261,44 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  border-bottom: 1px solid #e1e5e9;
+  position: sticky;
+  top: 0;
+  background: white;
   border-radius: 15px 15px 0 0;
+  z-index: 1;
 }
 
 .settings-header h3 {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
+  color: #333;
 }
 
-.toggle-btn {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #666;
   cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
   transition: all 0.3s ease;
-  white-space: nowrap;
-  font-size: 0.9rem;
 }
 
-.toggle-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.settings-content {
-  padding: 1.5rem;
-  background: white;
-  border-radius: 0 0 15px 15px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-  z-index: 1002;
-  max-height: 80vh;
-  overflow-y: auto;
-  margin-top: 1rem;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  width: 100%;
+.close-btn:hover {
+  background: #f0f0f0;
+  color: #333;
 }
 
 .setting-item {
   margin-bottom: 1rem;
+  padding: 0 1.5rem;
 }
 
 .setting-label {
@@ -362,31 +409,6 @@ export default {
 }
 
 @media (max-width: 768px) {
-  .settings-header {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: stretch;
-  }
-  
-  .settings-header h3 {
-    text-align: center;
-  }
-  
-  .toggle-btn {
-    width: 100%;
-    text-align: center;
-  }
-  
-  .action-buttons {
-    flex-direction: column;
-  }
-  
-  .permission-btn,
-  .test-btn {
-    flex: none;
-    width: 100%;
-  }
-  
   .settings-content {
     position: fixed;
     top: 0;
@@ -397,6 +419,18 @@ export default {
     border-radius: 0;
     z-index: 9999;
     margin-top: 0;
+    width: 100%;
+    min-width: 100%;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+  }
+  
+  .permission-btn,
+  .test-btn {
+    flex: none;
+    width: 100%;
   }
 }
 </style>
