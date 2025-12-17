@@ -157,35 +157,45 @@ export default {
       const taskData = {
         title: this.quickTask.title,
         description: '',
-        reminderTime: this.quickTask.reminderTime
+        priority: 'medium', // Default priority
+        category: 'other' // Default category
+      }
+      
+      // Handle reminder_time with proper timezone conversion
+      if (this.quickTask.reminderTime) {
+        // datetime-local input gives us a string like "2024-01-15T14:30" (local time, no timezone)
+        const localDate = new Date(this.quickTask.reminderTime)
+        
+        // Check if the date is valid
+        if (isNaN(localDate.getTime())) {
+          console.error('Geçersiz tarih formatı:', this.quickTask.reminderTime)
+          alert('Geçersiz tarih formatı. Lütfen tekrar deneyin.')
+          return
+        }
+        
+        // Convert to ISO string which includes timezone offset
+        // Django will handle timezone conversion on the backend
+        taskData.reminder_time = localDate.toISOString()
+        
+        console.log('Hatırlatma zamanı ayarlanıyor:', {
+          kullanıcıGirdiği: this.quickTask.reminderTime,
+          backendGönderilecek: taskData.reminder_time,
+          yerelSaat: localDate.toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })
+        })
       }
       
       await this.$store.dispatch('createTask', taskData)
       
-      // Zamanlanmış bildirim ayarla
-      if (taskData.reminderTime) {
+      // Store'da createTask zaten bildirimi zamanlıyor, burada ekstra bir şey yapmaya gerek yok
+      // Ama reminder_time yoksa anında bildirim gönderebiliriz
+      if (!taskData.reminder_time) {
         const settings = notificationService.getNotificationSettings()
         if (settings.enabled && settings.taskReminders) {
-          const taskWithId = {
-            id: Date.now(),
-            title: taskData.title,
-            description: taskData.description
+          // Yeni oluşturulan görev için anında bildirim gönder
+          const createdTask = this.tasks.find(t => t.title === taskData.title && !t.description)
+          if (createdTask) {
+            await notificationService.showTaskNotification(createdTask)
           }
-          
-          const timeoutId = notificationService.scheduleNotificationAt(taskWithId, taskData.reminderTime)
-          if (timeoutId) {
-            console.log('Hatırlatma ayarlandı:', taskData.reminderTime)
-          }
-        }
-      } else {
-        // Anında bildirim gönder
-        const settings = notificationService.getNotificationSettings()
-        if (settings.enabled && settings.taskReminders) {
-          await notificationService.showTaskNotification({
-            id: Date.now(),
-            title: this.quickTask.title,
-            description: ''
-          })
         }
       }
       

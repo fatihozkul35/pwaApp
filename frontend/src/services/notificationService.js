@@ -178,13 +178,36 @@ class NotificationService {
   // Belirli bir zamanda bildirim gönder
   scheduleNotificationAt(task, reminderTime) {
     const now = new Date()
+    // Backend'den gelen reminderTime UTC formatında olabilir
+    // new Date() otomatik olarak UTC'yi yerel saat dilimine çevirir
     const reminder = new Date(reminderTime)
+    
+    // Invalid date kontrolü
+    if (isNaN(reminder.getTime())) {
+      console.error('Geçersiz hatırlatma zamanı:', reminderTime)
+      return null
+    }
+    
     const delay = reminder.getTime() - now.getTime()
 
     if (delay > 0) {
-      console.log(`Bildirim ${delay}ms sonra gönderilecek (${reminder.toLocaleString()})`)
+      const delayMinutes = Math.floor(delay / 60000)
+      const delayHours = Math.floor(delayMinutes / 60)
+      const delayDays = Math.floor(delayHours / 24)
+      
+      let delayText = ''
+      if (delayDays > 0) {
+        delayText = `${delayDays} gün, ${delayHours % 24} saat`
+      } else if (delayHours > 0) {
+        delayText = `${delayHours} saat, ${delayMinutes % 60} dakika`
+      } else {
+        delayText = `${delayMinutes} dakika`
+      }
+      
+      console.log(`✅ Bildirim zamanlandı: "${task.title}" için ${delayText} sonra (${reminder.toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })})`)
       
       const timeoutId = setTimeout(() => {
+        console.log(`🔔 Hatırlatma bildirimi gönderiliyor: "${task.title}"`)
         this.showScheduledTaskNotification(task)
       }, delay)
 
@@ -193,7 +216,8 @@ class NotificationService {
       
       return timeoutId
     } else {
-      console.warn('Hatırlatma zamanı geçmiş')
+      const diffMinutes = Math.floor(Math.abs(delay) / 60000)
+      console.warn(`⚠️ Hatırlatma zamanı geçmiş: "${task.title}" - ${diffMinutes} dakika önce (${reminder.toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })})`)
       return null
     }
   }
@@ -297,6 +321,74 @@ class NotificationService {
     }
     
     localStorage.setItem('notificationHistory', JSON.stringify(history))
+  }
+
+  // Tüm görevler için bildirimleri zamanla
+  scheduleNotificationsForTasks(tasks) {
+    if (!Array.isArray(tasks)) {
+      console.warn('scheduleNotificationsForTasks: tasks bir array değil')
+      return
+    }
+
+    const settings = this.getNotificationSettings()
+    if (!settings.enabled || !settings.taskReminders) {
+      console.log('Bildirimler devre dışı')
+      return
+    }
+
+    // Önce mevcut zamanlanmış bildirimleri temizle
+    this.clearAllScheduledNotifications()
+
+    const now = new Date()
+    let scheduledCount = 0
+
+    tasks.forEach(task => {
+      // Sadece tamamlanmamış ve reminder_time olan görevler için bildirim zamanla
+      if (!task.completed && task.reminder_time) {
+        // Backend'den gelen reminder_time UTC formatında olabilir
+        const reminderTime = new Date(task.reminder_time)
+        
+        // Invalid date kontrolü
+        if (isNaN(reminderTime.getTime())) {
+          console.warn(`Geçersiz hatırlatma zamanı görev "${task.title}" için:`, task.reminder_time)
+          return
+        }
+        
+        const delay = reminderTime.getTime() - now.getTime()
+
+        // Sadece gelecekteki hatırlatmalar için bildirim zamanla
+        if (delay > 0) {
+          const delayMinutes = Math.floor(delay / 60000)
+          const delayHours = Math.floor(delayMinutes / 60)
+          const delayDays = Math.floor(delayHours / 24)
+          
+          let delayText = ''
+          if (delayDays > 0) {
+            delayText = `${delayDays} gün, ${delayHours % 24} saat`
+          } else if (delayHours > 0) {
+            delayText = `${delayHours} saat, ${delayMinutes % 60} dakika`
+          } else {
+            delayText = `${delayMinutes} dakika`
+          }
+          
+          console.log(`✅ Görev "${task.title}" için bildirim zamanlandı: ${delayText} sonra (${reminderTime.toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })})`)
+          
+          const timeoutId = setTimeout(() => {
+            console.log(`🔔 Hatırlatma bildirimi gönderiliyor: "${task.title}"`)
+            this.showScheduledTaskNotification(task)
+          }, delay)
+
+          // Timeout ID'yi sakla
+          this.saveScheduledNotification(task.id, timeoutId, task.reminder_time)
+          scheduledCount++
+        } else {
+          const diffMinutes = Math.floor(Math.abs(delay) / 60000)
+          console.log(`⚠️ Görev "${task.title}" için hatırlatma zamanı geçmiş: ${diffMinutes} dakika önce (${reminderTime.toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })})`)
+        }
+      }
+    })
+
+    console.log(`${scheduledCount} bildirim zamanlandı`)
   }
 }
 

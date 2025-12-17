@@ -26,6 +26,37 @@
             class="form-textarea"
           ></textarea>
         </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">{{ $t('tasks.priority') || 'Öncelik' }}</label>
+            <select v-model="newTask.priority" class="form-input">
+              <option value="low">{{ $t('tasks.priorityLow') || 'Düşük' }}</option>
+              <option value="medium">{{ $t('tasks.priorityMedium') || 'Orta' }}</option>
+              <option value="high">{{ $t('tasks.priorityHigh') || 'Yüksek' }}</option>
+              <option value="urgent">{{ $t('tasks.priorityUrgent') || 'Acil' }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">{{ $t('tasks.category') || 'Kategori' }}</label>
+            <select v-model="newTask.category" class="form-input">
+              <option value="work">{{ $t('tasks.categoryWork') || 'İş' }}</option>
+              <option value="personal">{{ $t('tasks.categoryPersonal') || 'Kişisel' }}</option>
+              <option value="shopping">{{ $t('tasks.categoryShopping') || 'Alışveriş' }}</option>
+              <option value="health">{{ $t('tasks.categoryHealth') || 'Sağlık' }}</option>
+              <option value="finance">{{ $t('tasks.categoryFinance') || 'Finans' }}</option>
+              <option value="other">{{ $t('tasks.categoryOther') || 'Diğer' }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">{{ $t('tasks.dueDate') || 'Bitiş Tarihi' }}</label>
+          <input 
+            v-model="newTask.dueDate" 
+            type="datetime-local"
+            class="form-input"
+          >
+          <small class="form-help">{{ $t('tasks.dueDateHelp') || 'Opsiyonel' }}</small>
+        </div>
         <div class="form-group">
           <label class="form-label">{{ $t('tasks.reminderTime') }}</label>
           <input 
@@ -78,8 +109,8 @@
         
         <div class="task-meta">
           <small>{{ formatDate(task.created_at) }}</small>
-          <small v-if="task.reminderTime" class="reminder-time">
-            ⏰ {{ formatReminderTime(task.reminderTime) }}
+          <small v-if="task.reminder_time" class="reminder-time">
+            ⏰ {{ formatReminderTime(task.reminder_time) }}
           </small>
         </div>
       </div>
@@ -103,6 +134,9 @@ export default {
       newTask: {
         title: '',
         description: '',
+        priority: 'medium',
+        category: 'other',
+        dueDate: '',
         reminderTime: ''
       }
     }
@@ -123,36 +157,65 @@ export default {
     
     async addTask() {
       const taskData = { ...this.newTask }
+      
+      // Convert camelCase to snake_case for backend
+      if (taskData.dueDate) {
+        const dueDate = new Date(taskData.dueDate)
+        if (!isNaN(dueDate.getTime())) {
+          taskData.due_date = dueDate.toISOString()
+        }
+        delete taskData.dueDate
+      }
+      
+      // Handle reminder_time with proper timezone conversion
+      if (taskData.reminderTime) {
+        // datetime-local input gives us a string like "2024-01-15T14:30" (local time, no timezone)
+        // We need to convert it to ISO format with timezone info for backend
+        const localDate = new Date(taskData.reminderTime)
+        
+        // Check if the date is valid
+        if (isNaN(localDate.getTime())) {
+          console.error('Geçersiz tarih formatı:', taskData.reminderTime)
+          alert('Geçersiz tarih formatı. Lütfen tekrar deneyin.')
+          return
+        }
+        
+        // Convert to ISO string which includes timezone offset
+        // Django will handle timezone conversion on the backend
+        taskData.reminder_time = localDate.toISOString()
+        
+        console.log('Hatırlatma zamanı ayarlanıyor:', {
+          kullanıcıGirdiği: taskData.reminderTime,
+          backendGönderilecek: taskData.reminder_time,
+          yerelSaat: localDate.toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })
+        })
+        
+        delete taskData.reminderTime
+      }
+      
       await this.createTask(taskData)
       
-      // Zamanlanmış bildirim ayarla
-      if (taskData.reminderTime) {
+      // Store'da createTask zaten bildirimi zamanlıyor, burada ekstra bir şey yapmaya gerek yok
+      // Ama reminder_time yoksa anında bildirim gönderebiliriz
+      if (!taskData.reminder_time) {
         const settings = notificationService.getNotificationSettings()
         if (settings.enabled && settings.taskReminders) {
-          const taskWithId = {
-            id: Date.now(), // Geçici ID - gerçek uygulamada backend'den gelecek
-            title: taskData.title,
-            description: taskData.description
+          // Yeni oluşturulan görev için anında bildirim gönder
+          const createdTask = this.tasks.find(t => t.title === taskData.title && t.description === taskData.description)
+          if (createdTask) {
+            await notificationService.showTaskNotification(createdTask)
           }
-          
-          const timeoutId = notificationService.scheduleNotificationAt(taskWithId, taskData.reminderTime)
-          if (timeoutId) {
-            console.log('Hatırlatma ayarlandı:', taskData.reminderTime)
-          }
-        }
-      } else {
-        // Anında bildirim gönder
-        const settings = notificationService.getNotificationSettings()
-        if (settings.enabled && settings.taskReminders) {
-          await notificationService.showTaskNotification({
-            id: Date.now(),
-            title: this.newTask.title,
-            description: this.newTask.description
-          })
         }
       }
       
-      this.newTask = { title: '', description: '', reminderTime: '' }
+      this.newTask = { 
+        title: '', 
+        description: '', 
+        priority: 'medium',
+        category: 'other',
+        dueDate: '',
+        reminderTime: '' 
+      }
       this.showAddForm = false
     },
     
@@ -185,8 +248,17 @@ export default {
     
     formatReminderTime(reminderTime) {
       if (!reminderTime) return ''
+      
+      // Backend'den gelen değer UTC formatında olabilir, doğru parse et
       const date = new Date(reminderTime)
       const now = new Date()
+      
+      // Invalid date kontrolü
+      if (isNaN(date.getTime())) {
+        console.error('Geçersiz tarih:', reminderTime)
+        return 'Geçersiz tarih'
+      }
+      
       const diff = date.getTime() - now.getTime()
       
       if (diff < 0) {
@@ -259,6 +331,19 @@ export default {
 
 .form-group {
   margin-bottom: 1rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 .form-input,

@@ -55,7 +55,13 @@ export default {
       const savedTasks = localStorage.getItem('tasks')
       
       if (savedTasks) {
-        this.$store.commit('SET_TASKS', JSON.parse(savedTasks))
+        const parsedTasks = JSON.parse(savedTasks)
+        this.$store.commit('SET_TASKS', parsedTasks)
+        // localStorage'dan yüklenen görevler için bildirimleri zamanla
+        const tasks = Array.isArray(parsedTasks.results) ? parsedTasks.results : (Array.isArray(parsedTasks) ? parsedTasks : [])
+        if (tasks.length > 0) {
+          notificationService.scheduleNotificationsForTasks(tasks)
+        }
       }
     },
     async loadInitialData() {

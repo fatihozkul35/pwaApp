@@ -10,6 +10,7 @@ import {
   getTaskStats
 } from '../services/api'
 import offlineService from '../services/offlineService'
+import notificationService from '../services/notificationService'
 
 export default createStore({
   state: {
@@ -32,7 +33,14 @@ export default createStore({
     SET_TASKS(state, tasks) {
       console.log('SET_TASKS mutation - gelen tasks:', tasks)
       console.log(Array.isArray(tasks))
-      state.tasks = Array.isArray(tasks.results) ? tasks.results : []
+      // Handle both paginated response (tasks.results) and direct array
+      if (tasks && Array.isArray(tasks.results)) {
+        state.tasks = tasks.results
+      } else if (Array.isArray(tasks)) {
+        state.tasks = tasks
+      } else {
+        state.tasks = []
+      }
       console.log('SET_TASKS mutation - state.tasks güncellendi:', state.tasks)
       // localStorage'a kaydet
       localStorage.setItem('tasks', JSON.stringify(state.tasks))
@@ -98,10 +106,24 @@ export default createStore({
         const response = await getTasks()
         console.log("response", response)
         console.log('Backend\'den gelen veriler:', response.data)
+        
+        // Görevler yüklendikten sonra bildirimleri zamanla (commit'ten önce)
+        let tasksToSchedule = []
+        if (response.data && Array.isArray(response.data.results)) {
+          tasksToSchedule = response.data.results
+        } else if (Array.isArray(response.data)) {
+          tasksToSchedule = response.data
+        }
+        
         commit('SET_TASKS', response.data)
         // localStorage'a kaydet
         localStorage.setItem('tasks', JSON.stringify(response.data))
         console.log('Veriler localStorage\'a kaydedildi')
+        
+        // Bildirimleri zamanla
+        if (tasksToSchedule.length > 0) {
+          notificationService.scheduleNotificationsForTasks(tasksToSchedule)
+        }
       } catch (error) {
         console.error('Backend\'den veri çekme hatası:', error)
         console.error('Error details:', error.response)
@@ -119,7 +141,14 @@ export default createStore({
         const savedTasks = localStorage.getItem('tasks')
         if (savedTasks) {
           console.log('localStorage\'dan veriler yükleniyor...')
-          commit('SET_TASKS', JSON.parse(savedTasks))
+          const parsedTasks = JSON.parse(savedTasks)
+          commit('SET_TASKS', parsedTasks)
+          // localStorage'dan yüklenen görevler için de bildirimleri zamanla
+          // SET_TASKS mutation'dan sonra state'ten al
+          const tasks = Array.isArray(parsedTasks.results) ? parsedTasks.results : (Array.isArray(parsedTasks) ? parsedTasks : [])
+          if (tasks.length > 0) {
+            notificationService.scheduleNotificationsForTasks(tasks)
+          }
         } else {
           console.log('localStorage\'da da veri yok')
         }
@@ -132,6 +161,14 @@ export default createStore({
       try {
         const response = await createTask(taskData)
         commit('ADD_TASK', response.data)
+        
+        // Yeni görev için bildirim zamanla (eğer reminder_time varsa)
+        if (response.data.reminder_time && !response.data.completed) {
+          const settings = notificationService.getNotificationSettings()
+          if (settings.enabled && settings.taskReminders) {
+            notificationService.scheduleNotificationAt(response.data, response.data.reminder_time)
+          }
+        }
         
         // Offline durumunda pending sync count'u güncelle
         if (response.data.offline) {
@@ -149,6 +186,21 @@ export default createStore({
         const response = await updateTask(id, taskData)
         commit('UPDATE_TASK', response.data)
         
+        // Görev güncellendiğinde bildirimleri yeniden zamanla
+        const updatedTask = response.data
+        if (updatedTask.reminder_time && !updatedTask.completed) {
+          // Önce mevcut bildirimi iptal et
+          notificationService.cancelScheduledNotification(updatedTask.id)
+          // Yeni bildirim zamanla
+          const settings = notificationService.getNotificationSettings()
+          if (settings.enabled && settings.taskReminders) {
+            notificationService.scheduleNotificationAt(updatedTask, updatedTask.reminder_time)
+          }
+        } else {
+          // Reminder_time yoksa veya tamamlandıysa bildirimi iptal et
+          notificationService.cancelScheduledNotification(updatedTask.id)
+        }
+        
         // Offline durumunda pending sync count'u güncelle
         if (response.data.offline) {
           commit('SET_PENDING_SYNC_COUNT', offlineService.getPendingSyncCount())
@@ -163,6 +215,9 @@ export default createStore({
       commit('SET_LOADING', true)
       try {
         const response = await deleteTask(taskId)
+        
+        // Görev silindiğinde bildirimi iptal et
+        notificationService.cancelScheduledNotification(taskId)
         
         // Offline durumunda pending sync count'u güncelle
         if (response.data && response.data.offline) {
