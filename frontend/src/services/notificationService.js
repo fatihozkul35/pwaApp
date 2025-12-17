@@ -25,6 +25,9 @@ class NotificationService {
     if (this.permission === 'granted') {
       this.registerServiceWorker()
     }
+    
+    // Sayfa yüklendiğinde zamanlanmış bildirimleri kontrol et ve yeniden zamanla
+    this.restoreScheduledNotifications()
   }
 
   async requestPermission() {
@@ -89,6 +92,12 @@ class NotificationService {
     }
 
     try {
+      // Eğer actions varsa Service Worker üzerinden gönder (actions sadece SW'de çalışır)
+      if (options.actions && options.actions.length > 0) {
+        return await this.showNotificationViaServiceWorker(title, options)
+      }
+
+      // Actions yoksa normal Notification API kullan
       const notification = new Notification(title, {
         icon: '/img/icons/icon-192x192.png',
         badge: '/img/icons/icon-96x96.png',
@@ -112,6 +121,53 @@ class NotificationService {
     } catch (error) {
       console.error('Bildirim gönderilemedi:', error)
       return false
+    }
+  }
+
+  // Service Worker üzerinden bildirim gönder (actions için gerekli)
+  async showNotificationViaServiceWorker(title, options = {}) {
+    try {
+      const registration = await navigator.serviceWorker.ready
+      
+      await registration.showNotification(title, {
+        icon: '/img/icons/icon-192x192.png',
+        badge: '/img/icons/icon-96x96.png',
+        requireInteraction: true,
+        silent: false,
+        vibrate: [200, 100, 200], // Bildirim titreşimi
+        data: options.data || {},
+        ...options
+      })
+
+      return true
+    } catch (error) {
+      console.error('Service Worker üzerinden bildirim gönderilemedi:', error)
+      // Fallback: actions olmadan normal bildirim gönder
+      try {
+        // eslint-disable-next-line no-unused-vars
+        const { actions, ...optionsWithoutActions } = options
+        const notification = new Notification(title, {
+          icon: '/img/icons/icon-192x192.png',
+          badge: '/img/icons/icon-96x96.png',
+          requireInteraction: true,
+          silent: false,
+          ...optionsWithoutActions
+        })
+
+        notification.onclick = () => {
+          window.focus()
+          notification.close()
+        }
+
+        setTimeout(() => {
+          notification.close()
+        }, 5000)
+
+        return true
+      } catch (fallbackError) {
+        console.error('Fallback bildirim de gönderilemedi:', fallbackError)
+        return false
+      }
     }
   }
 
@@ -232,6 +288,10 @@ class NotificationService {
     return this.showNotification(title, {
       body,
       tag: `scheduled-task-${task.id}`,
+      data: {
+        taskId: task.id,
+        task: task
+      },
       actions: [
         {
           action: 'complete',
@@ -251,7 +311,7 @@ class NotificationService {
   saveScheduledNotification(taskId, timeoutId, reminderTime) {
     const scheduled = JSON.parse(localStorage.getItem('scheduledNotifications') || '{}')
     scheduled[taskId] = {
-      timeoutId,
+      timeoutId: null, // setTimeout ID'yi kaydetme (sayfa yenilendiğinde geçersiz olur, restoreScheduledNotifications ile yeniden zamanlanır)
       reminderTime,
       createdAt: new Date().toISOString()
     }
@@ -262,7 +322,10 @@ class NotificationService {
   cancelScheduledNotification(taskId) {
     const scheduled = JSON.parse(localStorage.getItem('scheduledNotifications') || '{}')
     if (scheduled[taskId]) {
-      clearTimeout(scheduled[taskId].timeoutId)
+      // Eğer aktif bir timeout varsa iptal et
+      if (scheduled[taskId].timeoutId) {
+        clearTimeout(scheduled[taskId].timeoutId)
+      }
       delete scheduled[taskId]
       localStorage.setItem('scheduledNotifications', JSON.stringify(scheduled))
       return true
@@ -282,6 +345,75 @@ class NotificationService {
   // Zamanlanmış bildirimleri kontrol et
   getScheduledNotifications() {
     return JSON.parse(localStorage.getItem('scheduledNotifications') || '{}')
+  }
+
+  // Sayfa yüklendiğinde zamanlanmış bildirimleri geri yükle
+  restoreScheduledNotifications() {
+    const settings = this.getNotificationSettings()
+    if (!settings.enabled || !settings.taskReminders) {
+      return
+    }
+
+    const scheduled = this.getScheduledNotifications()
+    const now = new Date()
+    let restoredCount = 0
+    let expiredCount = 0
+
+    Object.keys(scheduled).forEach(taskId => {
+      const notification = scheduled[taskId]
+      const reminderTime = new Date(notification.reminderTime)
+      
+      // Geçersiz tarih kontrolü
+      if (isNaN(reminderTime.getTime())) {
+        console.warn(`Geçersiz hatırlatma zamanı task ${taskId} için`)
+        delete scheduled[taskId]
+        return
+      }
+
+      const delay = reminderTime.getTime() - now.getTime()
+
+      if (delay > 0) {
+        // Hala gelecekte, yeniden zamanla
+        // Task bilgisini localStorage'dan veya store'dan al
+        const tasks = JSON.parse(localStorage.getItem('tasks') || '[]')
+        const tasksArray = Array.isArray(tasks.results) ? tasks.results : (Array.isArray(tasks) ? tasks : [])
+        const task = tasksArray.find(t => t.id == taskId || t.id === parseInt(taskId))
+        
+        if (task && !task.completed) {
+          const delayMinutes = Math.floor(delay / 60000)
+          console.log(`🔄 Bildirim geri yüklendi: "${task.title}" için ${delayMinutes} dakika sonra`)
+          
+          const timeoutId = setTimeout(() => {
+            console.log(`🔔 Hatırlatma bildirimi gönderiliyor: "${task.title}"`)
+            this.showScheduledTaskNotification(task)
+            // Bildirim gönderildikten sonra localStorage'dan sil
+            this.cancelScheduledNotification(taskId)
+          }, delay)
+
+          // Timeout ID'yi güncelle
+          scheduled[taskId].timeoutId = timeoutId
+          restoredCount++
+        } else {
+          // Task bulunamadı veya tamamlanmış, bildirimi iptal et
+          delete scheduled[taskId]
+        }
+      } else {
+        // Zamanı geçmiş, bildirimi iptal et
+        console.log(`⏰ Bildirim zamanı geçmiş, iptal ediliyor: task ${taskId}`)
+        delete scheduled[taskId]
+        expiredCount++
+      }
+    })
+
+    // Güncellenmiş listeyi kaydet
+    localStorage.setItem('scheduledNotifications', JSON.stringify(scheduled))
+
+    if (restoredCount > 0) {
+      console.log(`✅ ${restoredCount} bildirim geri yüklendi`)
+    }
+    if (expiredCount > 0) {
+      console.log(`⏰ ${expiredCount} bildirim zamanı geçmiş, iptal edildi`)
+    }
   }
 
   // Bildirim ayarlarını kontrol et

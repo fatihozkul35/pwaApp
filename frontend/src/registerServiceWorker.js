@@ -82,15 +82,67 @@ if (process.env.NODE_ENV === 'production') {
     }
   })
 } else {
-  // Development mode - still register service worker for testing
+  // Development mode - register service worker with hot reload support
   if ('serviceWorker' in navigator) {
+    let refreshing = false
+    
     navigator.serviceWorker.register('/service-worker.js')
       .then(registration => {
         console.log('Service Worker registered in development mode:', registration)
+        
+        // Handle service worker updates in development
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing
+          
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              // New service worker available
+              console.log('New service worker available in development mode')
+              
+              // Skip waiting and activate immediately in development
+              if (newWorker.waiting) {
+                newWorker.postMessage({ type: 'SKIP_WAITING' })
+              }
+            }
+          })
+        })
+        
+        // Listen for controller change (service worker updated)
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (!refreshing) {
+            refreshing = true
+            console.log('Service worker updated, reloading page...')
+            // Reload after a short delay to allow service worker to activate
+            setTimeout(() => {
+              window.location.reload()
+            }, 100)
+          }
+        })
+        
+        // Check for updates periodically in development
+        setInterval(() => {
+          registration.update()
+        }, 60000) // Check every minute in development
+        
+        // Check if we're offline
+        if (!navigator.onLine) {
+          console.log('App is running in offline mode (development).')
+        }
       })
       .catch(error => {
         console.log('Service Worker registration failed:', error)
+        // In development, don't fail silently - log the error
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Service Worker registration failed. Offline features may not work.')
+        }
       })
+    
+    // Listen for messages from service worker
+    navigator.serviceWorker.addEventListener('message', event => {
+      if (event.data && event.data.type === 'SKIP_WAITING') {
+        window.location.reload()
+      }
+    })
   }
 }
 

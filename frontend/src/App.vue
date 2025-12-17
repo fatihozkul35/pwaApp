@@ -25,7 +25,7 @@
     </main>
     
     <footer class="footer">
-      <p>&copy; 2024 {{ $t('nav.appName') }}. {{ $t('footer.copyright') }}</p>
+      <p>&copy; 2025 {{ $t('nav.appName') }}. {{ $t('footer.copyright') }}</p>
     </footer>
   </div>
 </template>
@@ -47,6 +47,17 @@ export default {
     this.loadFromLocalStorage()
     // Sonra backend'den güncel verileri yükle
     await this.loadInitialData()
+    // Zamanlanmış bildirimleri geri yükle (sayfa yenilendiğinde)
+    notificationService.restoreScheduledNotifications()
+    
+    // Service Worker'dan gelen bildirim action mesajlarını dinle
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'NOTIFICATION_ACTION') {
+          this.handleNotificationAction(event.data)
+        }
+      })
+    }
   },
   methods: {
     ...mapActions(['fetchTasks']),
@@ -82,6 +93,50 @@ export default {
       // Basit mesaj gösterimi (toast notification)
       console.log('Message:', message)
       // Burada toast notification bileşeni kullanılabilir
+    },
+    
+    handleNotificationAction(data) {
+      const { action, data: notificationData } = data
+      const task = notificationData?.task
+      
+      if (!task) {
+        console.warn('Bildirim action için task bulunamadı')
+        return
+      }
+      
+      switch (action) {
+        case 'complete':
+          // Görevi tamamla
+          this.$store.dispatch('updateTask', {
+            id: task.id,
+            taskData: { ...task, completed: true }
+          })
+          console.log('Görev bildirimden tamamlandı:', task.title)
+          break
+        case 'snooze': {
+          // 10 dakika sonra tekrar hatırlat
+          const snoozeTime = new Date()
+          snoozeTime.setMinutes(snoozeTime.getMinutes() + 10)
+          
+          this.$store.dispatch('updateTask', {
+            id: task.id,
+            taskData: { ...task, reminder_time: snoozeTime.toISOString() }
+          })
+          
+          // Yeni bildirim zamanla
+          const settings = notificationService.getNotificationSettings()
+          if (settings.enabled && settings.taskReminders) {
+            notificationService.scheduleNotificationAt(
+              { ...task, reminder_time: snoozeTime.toISOString() },
+              snoozeTime.toISOString()
+            )
+          }
+          console.log('Görev 10 dakika ertelendi:', task.title)
+          break
+        }
+        default:
+          console.log('Bilinmeyen bildirim action:', action)
+      }
     }
   }
 }
